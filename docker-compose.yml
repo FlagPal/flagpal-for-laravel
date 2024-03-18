@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  php:
+    image: lorisleiva/laravel-docker:8.2
+    env_file: .env
+    working_dir: /var/www/
+    volumes:
+      - ".:/var/www:delegated"
+    command: tail -f /dev/null
+
