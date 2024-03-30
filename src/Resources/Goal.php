@@ -12,7 +12,9 @@ class Goal extends Item
 
     public const DESCRIPTION = 'description';
 
-    protected $type = 'goals';
+    public const TYPE = 'goals';
+
+    protected $type = self::TYPE;
 
     protected $fillable = [
         self::KIND,

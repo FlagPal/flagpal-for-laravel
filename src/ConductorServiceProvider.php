@@ -2,6 +2,7 @@
 
 namespace Rapkis\Conductor;
 
+use Illuminate\Contracts\Foundation\Application;
 use Rapkis\Conductor\Resources\Feature;
 use Rapkis\Conductor\Resources\FeatureSet;
 use Rapkis\Conductor\Resources\Funnel;
@@ -13,7 +14,6 @@ use Swis\JsonApi\Client\DocumentClient;
 use Swis\JsonApi\Client\Interfaces\ClientInterface;
 use Swis\JsonApi\Client\Interfaces\DocumentClientInterface;
 use Swis\JsonApi\Client\Interfaces\DocumentParserInterface;
-use Swis\JsonApi\Client\Interfaces\ItemInterface;
 use Swis\JsonApi\Client\Interfaces\ResponseParserInterface;
 use Swis\JsonApi\Client\Interfaces\TypeMapperInterface;
 use Swis\JsonApi\Client\Parsers\DocumentParser;
@@ -23,10 +23,10 @@ use Swis\JsonApi\Client\TypeMapper;
 class ConductorServiceProvider extends PackageServiceProvider
 {
     protected array $items = [
-        Feature::class,
-        Funnel::class,
-        FeatureSet::class,
-        Goal::class,
+        Feature::TYPE => Feature::class,
+        Funnel::TYPE => Funnel::class,
+        FeatureSet::TYPE => FeatureSet::class,
+        Goal::TYPE => Goal::class,
     ];
 
     public function configurePackage(Package $package): void
@@ -66,14 +66,16 @@ class ConductorServiceProvider extends PackageServiceProvider
             }
         );
 
-        /** @var Client $client */
-        $client = $this->app->make(Client::class);
-        $client->setDefaultHeaders(array_merge(
-            $client->getDefaultHeaders(),
-            ['Authorization' => 'Bearer '.config('conductor.bearer_token')],
-        ));
+        $this->app->bind(ClientInterface::class, function (Application $app) {
+            /** @var Client $client */
+            $client = $app->make(Client::class);
+            $client->setDefaultHeaders(array_merge(
+                $client->getDefaultHeaders(),
+                ['Authorization' => 'Bearer '.config('conductor.bearer_token')],
+            ));
 
-        $this->app->bind(ClientInterface::class, fn () => $client);
+            return $client;
+        });
         $this->app->bind(DocumentClientInterface::class, DocumentClient::class);
     }
 
@@ -81,11 +83,8 @@ class ConductorServiceProvider extends PackageServiceProvider
     {
         $mapper = $this->app->make(TypeMapperInterface::class);
 
-        foreach ($this->items as $class) {
-            /** @var ItemInterface $item */
-            $item = $this->app->make($class);
-
-            $mapper->setMapping($item->getType(), $class);
+        foreach ($this->items as $type => $class) {
+            $mapper->setMapping($type, $class);
         }
     }
 }

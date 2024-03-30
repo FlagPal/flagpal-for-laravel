@@ -18,7 +18,9 @@ class FeatureSet extends Item
 
     public const UPDATED_AT = 'updated_at';
 
-    protected $type = 'feature-sets';
+    public const TYPE = 'feature-sets';
+
+    protected $type = self::TYPE;
 
     protected $fillable = [
         self::FUNNEL,

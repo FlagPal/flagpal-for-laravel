@@ -27,7 +27,9 @@ class Funnel extends Item
 
     public const UPDATED_AT = 'updated_at';
 
-    protected $type = 'funnels';
+    public const TYPE = 'funnels';
+
+    protected $type = self::TYPE;
 
     protected $fillable = [
         self::KIND,

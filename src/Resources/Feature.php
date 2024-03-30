@@ -20,7 +20,9 @@ class Feature extends Item
 
     public const UPDATED_AT = 'updated_at';
 
-    protected $type = 'features';
+    public const TYPE = 'features';
+
+    protected $type = self::TYPE;
 
     protected $fillable = [
         self::NAME,
