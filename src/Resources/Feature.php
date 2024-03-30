@@ -2,9 +2,10 @@
 
 namespace Rapkis\Conductor\Resources;
 
+use Rapkis\Conductor\Contracts\Resources\Resource;
 use Swis\JsonApi\Client\Item;
 
-class Feature extends Item
+class Feature extends Item implements Resource
 {
     public const ID = 'id';
 

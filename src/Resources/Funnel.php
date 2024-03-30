@@ -2,12 +2,13 @@
 
 namespace Rapkis\Conductor\Resources;
 
+use Rapkis\Conductor\Contracts\Resources\Resource;
 use Rapkis\Conductor\Enums\FunnelKind;
 use Swis\JsonApi\Client\Interfaces\ManyRelationInterface;
 use Swis\JsonApi\Client\Item;
 use Swis\JsonApi\Client\Relations\HasManyRelation;
 
-class Funnel extends Item
+class Funnel extends Item implements Resource
 {
     public const KIND = 'kind';
 

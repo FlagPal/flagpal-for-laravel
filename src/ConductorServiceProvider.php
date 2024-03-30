@@ -3,6 +3,7 @@
 namespace Rapkis\Conductor;
 
 use Illuminate\Contracts\Foundation\Application;
+use Rapkis\Conductor\Contracts\Resources\Resource;
 use Rapkis\Conductor\Resources\Feature;
 use Rapkis\Conductor\Resources\FeatureSet;
 use Rapkis\Conductor\Resources\Funnel;
@@ -23,10 +24,10 @@ use Swis\JsonApi\Client\TypeMapper;
 class ConductorServiceProvider extends PackageServiceProvider
 {
     protected array $items = [
-        Feature::TYPE => Feature::class,
-        Funnel::TYPE => Funnel::class,
-        FeatureSet::TYPE => FeatureSet::class,
-        Goal::TYPE => Goal::class,
+        Feature::class,
+        Funnel::class,
+        FeatureSet::class,
+        Goal::class,
     ];
 
     public function configurePackage(Package $package): void
@@ -83,8 +84,9 @@ class ConductorServiceProvider extends PackageServiceProvider
     {
         $mapper = $this->app->make(TypeMapperInterface::class);
 
-        foreach ($this->items as $type => $class) {
-            $mapper->setMapping($type, $class);
+        /** @var class-string<resource> $class */
+        foreach ($this->items as $class) {
+            $mapper->setMapping($class::TYPE, $class);
         }
     }
 }

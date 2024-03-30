@@ -2,9 +2,10 @@
 
 namespace Rapkis\Conductor\Resources;
 
+use Rapkis\Conductor\Contracts\Resources\Resource;
 use Swis\JsonApi\Client\Item;
 
-class Goal extends Item
+class Goal extends Item implements Resource
 {
     public const KIND = 'kind';
 
