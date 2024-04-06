@@ -2,13 +2,20 @@
 
 namespace Rapkis\Conductor\Resources;
 
+use Illuminate\Support\Carbon;
 use Rapkis\Conductor\Contracts\Resources\Resource;
 use Swis\JsonApi\Client\Item;
 
+/**
+ * @property string $name
+ * @property string $description
+ * @property string $kind
+ * @property array $rules
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class Feature extends Item implements Resource
 {
-    public const ID = 'id';
-
     public const NAME = 'name';
 
     public const DESCRIPTION = 'description';

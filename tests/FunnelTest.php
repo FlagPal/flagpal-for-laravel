@@ -1,38 +1,38 @@
 <?php
 
-use Rapkis\Conductor\Resources\FeatureSet;
 use Rapkis\Conductor\Resources\Funnel;
-use Rapkis\Conductor\Resources\Goal;
-use Swis\JsonApi\Client\Collection;
+use Swis\JsonApi\Client\ItemHydrator;
 
 it('has feature sets as a relation', function () {
-    $funnel = new Funnel();
-    $funnel->setId('1234');
-    $funnel->featureSets()->associate(new Collection((new FeatureSet())->setId('5678')));
+    /** @var ItemHydrator $hydrator */
+    $hydrator = app(ItemHydrator::class);
 
-    expect($funnel->toJsonApiArray())->toBe([
-        'type' => 'funnels',
-        'id' => '1234',
-        'relationships' => [
-            'feature_sets' => [
-                'data' => [],
-            ],
+    /** @var Funnel $funnel */
+    $funnel = $hydrator->hydrate(new Funnel(), [
+        Funnel::ACTIVE => true,
+        Funnel::PERCENT => 100,
+        Funnel::RULES => [],
+        'featureSets' => [
+            ['id' => '5678'],
         ],
-    ]);
+    ], '1234');
+
+    expect($funnel->featureSets)->toHaveCount(1);
 });
 
 it('has goals as a relation', function () {
-    $funnel = new Funnel();
-    $funnel->setId('1234');
-    $funnel->goals()->associate(new Collection((new Goal())->setId('5678')));
+    /** @var ItemHydrator $hydrator */
+    $hydrator = app(ItemHydrator::class);
 
-    expect($funnel->toJsonApiArray())->toBe([
-        'type' => 'funnels',
-        'id' => '1234',
-        'relationships' => [
-            'goals' => [
-                'data' => [],
-            ],
+    /** @var Funnel $funnel */
+    $funnel = $hydrator->hydrate(new Funnel(), [
+        Funnel::ACTIVE => true,
+        Funnel::PERCENT => 100,
+        Funnel::RULES => [],
+        'goals' => [
+            ['id' => '5678'],
         ],
-    ]);
+    ], '1234');
+
+    expect($funnel->goals)->toHaveCount(1);
 });

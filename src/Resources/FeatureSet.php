@@ -2,9 +2,18 @@
 
 namespace Rapkis\Conductor\Resources;
 
+use Illuminate\Support\Carbon;
 use Rapkis\Conductor\Contracts\Resources\Resource;
 use Swis\JsonApi\Client\Item;
 
+/**
+ * @property string $funnel
+ * @property string $name
+ * @property int|null $weight
+ * @property array<string, mixed> $features
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class FeatureSet extends Item implements Resource
 {
     public const FUNNEL = 'funnel';
