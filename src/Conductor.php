@@ -4,13 +4,15 @@ namespace Rapkis\Conductor;
 
 use DateInterval;
 use Illuminate\Support\Collection;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
 use Rapkis\Conductor\Repositories\FunnelRepository;
 use Rapkis\Conductor\Resources\Funnel;
 use Swis\JsonApi\Client\InvalidResponseDocument;
 
-class Conductor
+class Conductor implements LoggerAwareInterface
 {
     /** @var array<string,array<string, array>> */
     private array $entered = [];
@@ -18,7 +20,8 @@ class Conductor
     public function __construct(
         protected readonly FunnelRepository $funnelRepository,
         protected readonly ResolveFeaturesFromFunnel $resolver,
-        public readonly ?CacheInterface $cache,
+        protected readonly ?CacheInterface $cache,
+        protected ?LoggerInterface $logger = null,
         protected readonly int $cacheTtlSeconds = 60,
     ) {
     }
@@ -55,14 +58,13 @@ class Conductor
         ];
         $cacheKey = 'conductor-funnels-'.json_encode($parameters);
 
-        if ($this->cache && $this->cache->has($cacheKey)) {
-            return $this->cache->get($cacheKey);
+        if (($funnels = $this->cache?->get($cacheKey))) {
+            return $funnels;
         }
 
         $document = $this->funnelRepository->all($parameters);
         if ($document instanceof InvalidResponseDocument || $document->hasErrors()) {
-            // todo do something with errors.
-            // do we throw an exception or allow to fail silently? or do we provide an option for both?
+            $this->logger?->error('Conductor failed to load funnels', ['document' => $document->toArray()]);
         }
 
         $funnels = Collection::make($document->getData());
@@ -73,5 +75,10 @@ class Conductor
         );
 
         return $funnels;
+    }
+
+    public function setLogger(?LoggerInterface $logger = null): void
+    {
+        $this->logger = $logger;
     }
 }

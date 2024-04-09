@@ -1,13 +1,16 @@
 <?php
 
+use Illuminate\Contracts\Cache\Repository;
+use Psr\Log\LoggerInterface;
 use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
 use Rapkis\Conductor\Conductor;
 use Rapkis\Conductor\Repositories\FunnelRepository;
 use Rapkis\Conductor\Resources\FeatureSet;
 use Rapkis\Conductor\Resources\Funnel;
 use Swis\JsonApi\Client\Collection;
+use Swis\JsonApi\Client\Document;
+use Swis\JsonApi\Client\ErrorCollection;
 use Swis\JsonApi\Client\Interfaces\DocumentInterface;
-use Swis\JsonApi\Client\InvalidResponseDocument;
 use Swis\JsonApi\Client\ItemHydrator;
 
 it('loads funnels from API', function () {
@@ -31,23 +34,42 @@ it('loads funnels from API', function () {
     $conductor->resolveFeatures();
 });
 
-//it('handles API errors', function () {
-//    $funnelRepository = $this->createStub(FunnelRepository::class);
-//    $conductor = new Conductor(
-//        $funnelRepository,
-//        $this->createStub(ResolveFeaturesFromFunnel::class),
-//        null
-//    );
-//
-//    $document = new InvalidResponseDocument();
-//    $funnelRepository->method('all')
-//        ->willReturn($document);
-//
-//    $conductor->resolveFeatures();
-//});
+it('handles API errors', function (bool $hasLogger) {
+    $logger = $this->createMock(LoggerInterface::class);
+    $funnelRepository = $this->createStub(FunnelRepository::class);
+    $conductor = new Conductor(
+        $funnelRepository,
+        $this->createStub(ResolveFeaturesFromFunnel::class),
+        null,
+    );
+
+    if ($hasLogger) {
+        $conductor->setLogger($logger);
+    }
+
+    $errors = new ErrorCollection([new \Swis\JsonApi\Client\Error('123', null, '401', '401')]);
+    $document = new Document();
+    $document->setErrors($errors);
+
+    $funnelRepository->method('all')
+        ->willReturn($document);
+
+    if ($hasLogger) {
+        $logger->expects($this->once())
+            ->method('error')
+            ->with('Conductor failed to load funnels', ['document' => ['errors' => $errors->toArray()]]);
+    } else {
+        $logger->expects($this->never())->method('error');
+    }
+
+    $conductor->resolveFeatures();
+})->with([
+    [false],
+    [true],
+]);
 
 it('caches funnels', function () {
-    $cache = app(\Illuminate\Contracts\Cache\Repository::class);
+    $cache = app(Repository::class);
     $funnelRepository = $this->createMock(FunnelRepository::class);
 
     $conductor = new Conductor(
@@ -81,7 +103,7 @@ it('caches funnels', function () {
 it('resolves features from all funnels', function () {
     $resolver = $this->createMock(ResolveFeaturesFromFunnel::class);
     /** @var \Psr\SimpleCache\CacheInterface $cache */
-    $cache = app(\Illuminate\Contracts\Cache\Repository::class);
+    $cache = app(Repository::class);
 
     $conductor = new Conductor(
         $this->createStub(FunnelRepository::class),
@@ -131,7 +153,7 @@ it('resolves features from all funnels', function () {
 
 it('skips funnel if no set was resolved', function () {
     /** @var \Psr\SimpleCache\CacheInterface $cache */
-    $cache = app(\Illuminate\Contracts\Cache\Repository::class);
+    $cache = app(Repository::class);
 
     $conductor = new Conductor(
         $this->createStub(FunnelRepository::class),
