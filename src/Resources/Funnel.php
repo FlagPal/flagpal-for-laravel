@@ -2,12 +2,27 @@
 
 namespace Rapkis\Conductor\Resources;
 
+use Illuminate\Support\Carbon;
 use Rapkis\Conductor\Contracts\Resources\Resource;
 use Rapkis\Conductor\Enums\FunnelKind;
+use Swis\JsonApi\Client\Collection;
 use Swis\JsonApi\Client\Interfaces\ManyRelationInterface;
 use Swis\JsonApi\Client\Item;
 use Swis\JsonApi\Client\Relations\HasManyRelation;
 
+/**
+ * @property FunnelKind $kind
+ * @property bool $active
+ * @property int $percent
+ * @property int $weight
+ * @property string $name
+ * @property string $description
+ * @property array $rules
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property Collection $featureSets
+ * @property Collection $goals
+ */
 class Funnel extends Item implements Resource
 {
     public const KIND = 'kind';
@@ -31,6 +46,11 @@ class Funnel extends Item implements Resource
     public const TYPE = 'funnels';
 
     protected $type = self::TYPE;
+
+    protected $availableRelations = [
+        'featureSets',
+        'goals',
+    ];
 
     protected $fillable = [
         self::KIND,
