@@ -70,7 +70,7 @@ class Conductor implements LoggerAwareInterface
         $funnels = Collection::make($document->getData());
         $this->cache?->set(
             $cacheKey,
-            $funnels, // todo does it make sense to set an object in cache?
+            $funnels,
             DateInterval::createFromDateString("{$this->cacheTtlSeconds} seconds")
         );
 
