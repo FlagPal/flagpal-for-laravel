@@ -3,7 +3,7 @@
 use Rapkis\Conductor\Resources\Feature;
 use Rapkis\Conductor\Resources\FeatureSet;
 use Rapkis\Conductor\Resources\Funnel;
-use Rapkis\Conductor\Resources\Goal;
+use Rapkis\Conductor\Resources\Metric;
 use Swis\JsonApi\Client\Client;
 use Swis\JsonApi\Client\Interfaces\ClientInterface;
 use Swis\JsonApi\Client\Interfaces\ItemInterface;
@@ -32,7 +32,7 @@ it('maps resources to ItemMapper', function () {
         Feature::class,
         Funnel::class,
         FeatureSet::class,
-        Goal::class,
+        Metric::class,
     ];
 
     foreach ($resources as $resource) {

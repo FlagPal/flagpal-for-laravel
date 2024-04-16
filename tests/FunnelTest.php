@@ -20,7 +20,7 @@ it('has feature sets as a relation', function () {
     expect($funnel->featureSets)->toHaveCount(1);
 });
 
-it('has goals as a relation', function () {
+it('has metrics as a relation', function () {
     /** @var ItemHydrator $hydrator */
     $hydrator = app(ItemHydrator::class);
 
@@ -29,10 +29,10 @@ it('has goals as a relation', function () {
         Funnel::ACTIVE => true,
         Funnel::PERCENT => 100,
         Funnel::RULES => [],
-        'goals' => [
+        'metrics' => [
             ['id' => '5678'],
         ],
     ], '1234');
 
-    expect($funnel->goals)->toHaveCount(1);
+    expect($funnel->metrics)->toHaveCount(1);
 });

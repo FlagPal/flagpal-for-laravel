@@ -21,7 +21,7 @@ use Swis\JsonApi\Client\Relations\HasManyRelation;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Collection $featureSets
- * @property Collection $goals
+ * @property Collection $metrics
  */
 class Funnel extends Item implements Resource
 {
@@ -49,7 +49,7 @@ class Funnel extends Item implements Resource
 
     protected $availableRelations = [
         'featureSets',
-        'goals',
+        'metrics',
     ];
 
     protected $fillable = [
@@ -75,8 +75,8 @@ class Funnel extends Item implements Resource
         return $this->hasMany(FeatureSet::class);
     }
 
-    public function goals(): ManyRelationInterface|HasManyRelation
+    public function metrics(): ManyRelationInterface|HasManyRelation
     {
-        return $this->hasMany(Goal::class);
+        return $this->hasMany(Metric::class);
     }
 }
