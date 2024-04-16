@@ -54,7 +54,7 @@ class Conductor implements LoggerAwareInterface
     {
         $parameters = [
             'filter' => ['active' => true],
-            'include' => 'featureSets,goals',
+            'include' => 'featureSets,metrics',
         ];
         $cacheKey = 'conductor-funnels-'.json_encode($parameters);
 

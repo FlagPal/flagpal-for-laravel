@@ -10,7 +10,7 @@ use Swis\JsonApi\Client\Item;
  * @property string $name
  * @property string $description
  */
-class Goal extends Item implements Resource
+class Metric extends Item implements Resource
 {
     public const KIND = 'kind';
 
@@ -18,7 +18,7 @@ class Goal extends Item implements Resource
 
     public const DESCRIPTION = 'description';
 
-    public const TYPE = 'goals';
+    public const TYPE = 'metrics';
 
     protected $type = self::TYPE;
 

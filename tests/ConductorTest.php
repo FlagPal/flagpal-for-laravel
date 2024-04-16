@@ -27,7 +27,7 @@ it('loads funnels from API', function () {
         ->method('all')
         ->with([
             'filter' => ['active' => true],
-            'include' => 'featureSets,goals',
+            'include' => 'featureSets,metrics',
         ])
         ->willReturn($document);
 
@@ -86,7 +86,7 @@ it('caches funnels', function () {
 
     $parameters = [
         'filter' => ['active' => true],
-        'include' => 'featureSets,goals',
+        'include' => 'featureSets,metrics',
     ];
     $cacheKey = 'conductor-funnels-'.json_encode($parameters);
 
@@ -113,7 +113,7 @@ it('resolves features from all funnels', function () {
 
     $parameters = [
         'filter' => ['active' => true],
-        'include' => 'featureSets,goals',
+        'include' => 'featureSets,metrics',
     ];
     $cacheKey = 'conductor-funnels-'.json_encode($parameters);
 
@@ -163,7 +163,7 @@ it('skips funnel if no set was resolved', function () {
 
     $parameters = [
         'filter' => ['active' => true],
-        'include' => 'featureSets,goals',
+        'include' => 'featureSets,metrics',
     ];
     $cacheKey = 'conductor-funnels-'.json_encode($parameters);
 
