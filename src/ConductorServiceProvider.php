@@ -2,7 +2,6 @@
 
 namespace Rapkis\Conductor;
 
-use Illuminate\Contracts\Foundation\Application;
 use Rapkis\Conductor\Contracts\Resources\Resource;
 use Rapkis\Conductor\Resources\Feature;
 use Rapkis\Conductor\Resources\FeatureSet;
@@ -42,6 +41,10 @@ class ConductorServiceProvider extends PackageServiceProvider
         $this->registerSharedTypeMapper();
         $this->registerParsers();
         $this->registerClients();
+
+        $this->app->when(Conductor::class)
+            ->needs('$config')
+            ->give($this->app['config']['conductor']);
     }
 
     protected function registerSharedTypeMapper()
@@ -61,22 +64,13 @@ class ConductorServiceProvider extends PackageServiceProvider
         $this->app->extend(
             ClientInterface::class,
             static function (ClientInterface $client) {
-                $client->setBaseUri(rtrim(config('conductor.base_uri'), '/').'/');
+                $client->setBaseUri(rtrim(config('conductor.base_url'), '/').'/');
 
                 return $client;
             }
         );
 
-        $this->app->bind(ClientInterface::class, function (Application $app) {
-            /** @var Client $client */
-            $client = $app->make(Client::class);
-            $client->setDefaultHeaders(array_merge(
-                $client->getDefaultHeaders(),
-                ['Authorization' => 'Bearer '.config('conductor.bearer_token')],
-            ));
-
-            return $client;
-        });
+        $this->app->bind(ClientInterface::class, Client::class);
         $this->app->bind(DocumentClientInterface::class, DocumentClient::class);
     }
 
