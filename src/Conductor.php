@@ -14,16 +14,24 @@ use Swis\JsonApi\Client\InvalidResponseDocument;
 
 class Conductor implements LoggerAwareInterface
 {
+    /** @var array<string,array> */
+    private array $projects;
+
+    private string $project;
+
     /** @var array<string,array<string, array>> */
     private array $entered = [];
 
     public function __construct(
+        protected array $config,
         protected readonly FunnelRepository $funnelRepository,
         protected readonly ResolveFeaturesFromFunnel $resolver,
         protected readonly ?CacheInterface $cache,
         protected ?LoggerInterface $logger = null,
         protected readonly int $cacheTtlSeconds = 60,
     ) {
+        $this->projects = $this->config['projects'];
+        $this->project = $this->config['default_project'];
     }
 
     public function resolveFeatures(array $currentFeatures = []): array
@@ -56,13 +64,14 @@ class Conductor implements LoggerAwareInterface
             'filter' => ['active' => true],
             'include' => 'featureSets,metrics',
         ];
-        $cacheKey = 'conductor-funnels-'.json_encode($parameters);
+        $headers = ['Authorization' => "Bearer {$this->projects[$this->project]['bearer_token']}"];
+        $cacheKey = "conductor-funnels-{$this->project}-".json_encode($parameters);
 
         if (($funnels = $this->cache?->get($cacheKey))) {
             return $funnels;
         }
 
-        $document = $this->funnelRepository->all($parameters);
+        $document = $this->funnelRepository->all($parameters, $headers);
         if ($document instanceof InvalidResponseDocument || $document->hasErrors()) {
             $this->logger?->error('Conductor failed to load funnels', ['document' => $document->toArray()]);
         }
@@ -80,5 +89,12 @@ class Conductor implements LoggerAwareInterface
     public function setLogger(?LoggerInterface $logger = null): void
     {
         $this->logger = $logger;
+    }
+
+    public function asProject(string $project): self
+    {
+        $this->project = $project;
+
+        return $this;
     }
 }
