@@ -18,7 +18,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'BooleanRule',
+                'rule' => 'boolean',
                 'value' => false,
             ],
         ],
@@ -29,7 +29,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'EqualRule',
+                'rule' => 'equal',
                 'value' => null,
             ],
         ],
@@ -45,7 +45,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'red_button',
-                'rule' => 'EqualRule',
+                'rule' => 'equal',
                 'value' => true,
             ],
         ],
@@ -56,7 +56,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'red_button',
-                'rule' => 'EqualRule',
+                'rule' => 'equal',
                 'value' => true,
             ],
         ],
@@ -67,7 +67,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'red_button',
-                'rule' => 'EqualRule',
+                'rule' => 'equal',
                 'value' => null,
             ],
         ],
@@ -78,7 +78,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'red_button',
-                'rule' => 'EqualRule',
+                'rule' => 'equal',
                 'value' => null,
             ],
         ],
@@ -89,7 +89,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'InRule',
+                'rule' => 'in',
                 'value' => ['foo', 'bar'],
             ],
         ],
@@ -100,7 +100,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'InRule',
+                'rule' => 'in',
                 'value' => ['foo', 'bar'],
             ],
         ],
@@ -111,7 +111,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'EqualRule',
+                'rule' => 'equal',
                 'value' => ['array', 'foo', 'bar'],
             ],
         ],
@@ -122,7 +122,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'EqualRule',
+                'rule' => 'equal',
                 'value' => [],
             ],
         ],
@@ -133,7 +133,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'EqualRule',
+                'rule' => 'equal',
                 'value' => null,
             ],
         ],
@@ -144,7 +144,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'ContainsRule',
+                'rule' => 'contains',
                 'value' => null,
             ],
         ],
@@ -155,7 +155,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'ContainsRule',
+                'rule' => 'contains',
                 'value' => 'test',
             ],
         ],
@@ -166,7 +166,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'ContainsRule',
+                'rule' => 'contains',
                 'value' => 'test',
             ],
         ],
@@ -177,7 +177,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'ContainsRule',
+                'rule' => 'contains',
                 'value' => ['test'],
             ],
         ],
@@ -188,7 +188,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'InRule',
+                'rule' => 'in',
                 'value' => ['foo', 'bar'],
             ],
         ],
@@ -199,7 +199,7 @@ it('validates features by rules', function (array $features, array $rules, bool 
         [
             [
                 'feature' => 'green_button',
-                'rule' => 'InRule',
+                'rule' => 'in',
                 'value' => ['foo', 'bar'],
             ],
         ],

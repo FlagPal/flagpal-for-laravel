@@ -1,11 +1,11 @@
 <?php
 
 use Rapkis\Conductor\Validation\RuleFactory;
-use Rapkis\Conductor\Validation\Rules\EqualRule;
+use Rapkis\Conductor\Validation\Rules\DateBeforeOrEqualRule;
 
 it('can make a rule', function () {
     $factory = new RuleFactory();
-    expect($factory->make('EqualRule'))->toBeInstanceOf(EqualRule::class);
+    expect($factory->make('date_before_or_equal'))->toBeInstanceOf(DateBeforeOrEqualRule::class);
 });
 
 it('throws exception if rule class does not exist', function () {
