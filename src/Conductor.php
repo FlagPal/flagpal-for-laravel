@@ -22,16 +22,18 @@ class Conductor implements LoggerAwareInterface
     /** @var array<string,array<string, array>> */
     private array $entered = [];
 
+    private int $cacheTtlSeconds;
+
     public function __construct(
         protected array $config,
         protected readonly FunnelRepository $funnelRepository,
         protected readonly ResolveFeaturesFromFunnel $resolver,
-        protected readonly ?CacheInterface $cache,
+        protected readonly CacheInterface $cache,
         protected ?LoggerInterface $logger = null,
-        protected readonly int $cacheTtlSeconds = 60,
     ) {
         $this->projects = $this->config['projects'];
         $this->project = $this->config['default_project'];
+        $this->cacheTtlSeconds = (int) ($this->config['cache']['ttl'] ?? 60);
     }
 
     public function resolveFeatures(array $currentFeatures = []): array
@@ -67,17 +69,19 @@ class Conductor implements LoggerAwareInterface
         $headers = ['Authorization' => "Bearer {$this->projects[$this->project]['bearer_token']}"];
         $cacheKey = "conductor-funnels-{$this->project}-".json_encode($parameters);
 
-        if (($funnels = $this->cache?->get($cacheKey))) {
+        if (($funnels = $this->cache->get($cacheKey))) {
             return $funnels;
         }
 
         $document = $this->funnelRepository->all($parameters, $headers);
         if ($document instanceof InvalidResponseDocument || $document->hasErrors()) {
             $this->logger?->error('Conductor failed to load funnels', ['document' => $document->toArray()]);
+
+            return new Collection();
         }
 
         $funnels = Collection::make($document->getData());
-        $this->cache?->set(
+        $this->cache->set(
             $cacheKey,
             $funnels,
             DateInterval::createFromDateString("{$this->cacheTtlSeconds} seconds")

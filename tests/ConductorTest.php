@@ -2,6 +2,7 @@
 
 use Illuminate\Contracts\Cache\Repository;
 use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
 use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
 use Rapkis\Conductor\Conductor;
 use Rapkis\Conductor\Repositories\FunnelRepository;
@@ -29,7 +30,7 @@ it('loads funnels from API', function () {
         $config,
         $funnelRepository,
         $this->createStub(ResolveFeaturesFromFunnel::class),
-        null
+        $this->createStub(CacheInterface::class),
     );
 
     $document = $this->createStub(DocumentInterface::class);
@@ -58,11 +59,12 @@ it('handles API errors', function (bool $hasLogger) {
 
     $logger = $this->createMock(LoggerInterface::class);
     $funnelRepository = $this->createStub(FunnelRepository::class);
+    $cache = $this->createMock(CacheInterface::class);
     $conductor = new Conductor(
         $config,
         $funnelRepository,
         $this->createStub(ResolveFeaturesFromFunnel::class),
-        null,
+        $cache,
     );
 
     if ($hasLogger) {
@@ -83,6 +85,8 @@ it('handles API errors', function (bool $hasLogger) {
     } else {
         $logger->expects($this->never())->method('error');
     }
+
+    $cache->expects($this->never())->method('set');
 
     $conductor->resolveFeatures();
 })->with([
@@ -145,7 +149,7 @@ it('resolves features from all funnels', function () {
     ];
 
     $resolver = $this->createMock(ResolveFeaturesFromFunnel::class);
-    /** @var \Psr\SimpleCache\CacheInterface $cache */
+    /** @var CacheInterface $cache */
     $cache = app(Repository::class);
 
     $conductor = new Conductor(
@@ -206,7 +210,7 @@ it('skips funnel if no set was resolved', function () {
         ],
     ];
 
-    /** @var \Psr\SimpleCache\CacheInterface $cache */
+    /** @var CacheInterface $cache */
     $cache = app(Repository::class);
 
     $conductor = new Conductor(
