@@ -2,7 +2,7 @@
 
 namespace Rapkis\Conductor;
 
-use DateInterval;
+use Carbon\CarbonInterval;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Log\LogManager;
 use Illuminate\Support\Collection;
@@ -84,7 +84,7 @@ class Conductor
         $this->cache()->set(
             $cacheKey,
             $funnels,
-            DateInterval::createFromDateString("{$this->cacheTtlSeconds} seconds")
+            CarbonInterval::seconds($this->cacheTtlSeconds),
         );
 
         return $funnels;
