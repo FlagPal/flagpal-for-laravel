@@ -41,10 +41,6 @@ class ConductorServiceProvider extends PackageServiceProvider
         $this->registerSharedTypeMapper();
         $this->registerParsers();
         $this->registerClients();
-
-        $this->app->when(Conductor::class)
-            ->needs('$config')
-            ->give($this->app['config']['conductor']);
     }
 
     protected function registerSharedTypeMapper()
