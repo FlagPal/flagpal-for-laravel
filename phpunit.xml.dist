@@ -27,6 +27,9 @@
             <clover outputFile="build/logs/clover.xml"/>
         </report>
     </coverage>
+    <php>
+        <env name="CONDUCTOR_PROJECT" value="My Project"/>
+    </php>
     <logging>
         <junit outputFile="build/report.junit.xml"/>
     </logging>
