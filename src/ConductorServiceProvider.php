@@ -2,10 +2,6 @@
 
 namespace Rapkis\Conductor;
 
-use Illuminate\Cache\CacheManager;
-use Illuminate\Log\LogManager;
-use Psr\Log\LoggerInterface;
-use Psr\SimpleCache\CacheInterface;
 use Rapkis\Conductor\Contracts\Resources\Resource;
 use Rapkis\Conductor\Resources\Feature;
 use Rapkis\Conductor\Resources\FeatureSet;
@@ -45,37 +41,6 @@ class ConductorServiceProvider extends PackageServiceProvider
         $this->registerSharedTypeMapper();
         $this->registerParsers();
         $this->registerClients();
-
-        $this->app->when(Conductor::class)
-            ->needs('$config')
-            ->give($this->app['config']['conductor']);
-
-        $this->app->when(Conductor::class)
-            ->needs(CacheInterface::class)
-            ->give(function () {
-                /** @var CacheManager $cacheManager */
-                $cacheManager = $this->app->make(CacheManager::class);
-                $driver = $this->app['config']['conductor']['cache']['driver'] ?? null;
-
-                return match ($driver) {
-                    'default' => $cacheManager->driver(),
-                    null => $cacheManager->driver('array'),
-                    default => $cacheManager->driver($driver),
-                };
-            });
-
-        $logManager = $this->app->make(LogManager::class);
-        $this->app->when(Conductor::class)
-            ->needs(LoggerInterface::class)
-            ->give(function () use ($logManager) {
-                $driver = $this->app['config']['conductor']['log']['driver'] ?? null;
-
-                return match ($driver) {
-                    'default' => $logManager->driver(),
-                    null => null,
-                    default => $logManager->driver($driver),
-                };
-            });
     }
 
     protected function registerSharedTypeMapper()

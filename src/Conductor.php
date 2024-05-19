@@ -3,8 +3,9 @@
 namespace Rapkis\Conductor;
 
 use DateInterval;
+use Illuminate\Cache\CacheManager;
+use Illuminate\Log\LogManager;
 use Illuminate\Support\Collection;
-use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
@@ -12,7 +13,7 @@ use Rapkis\Conductor\Repositories\FunnelRepository;
 use Rapkis\Conductor\Resources\Funnel;
 use Swis\JsonApi\Client\InvalidResponseDocument;
 
-class Conductor implements LoggerAwareInterface
+class Conductor
 {
     /** @var array<string,array> */
     private array $projects;
@@ -25,15 +26,14 @@ class Conductor implements LoggerAwareInterface
     private int $cacheTtlSeconds;
 
     public function __construct(
-        protected array $config,
         protected readonly FunnelRepository $funnelRepository,
         protected readonly ResolveFeaturesFromFunnel $resolver,
-        protected readonly CacheInterface $cache,
-        protected ?LoggerInterface $logger = null,
+        protected readonly CacheManager $cache,
+        protected LogManager $log,
     ) {
-        $this->projects = $this->config['projects'];
-        $this->project = $this->config['default_project'];
-        $this->cacheTtlSeconds = (int) ($this->config['cache']['ttl'] ?? 60);
+        $this->projects = config('conductor.projects');
+        $this->project = config('conductor.default_project');
+        $this->cacheTtlSeconds = (int) config('conductor.cache.ttl', 60);
     }
 
     public function resolveFeatures(array $currentFeatures = []): array
@@ -69,19 +69,19 @@ class Conductor implements LoggerAwareInterface
         $headers = ['Authorization' => "Bearer {$this->projects[$this->project]['bearer_token']}"];
         $cacheKey = "conductor-funnels-{$this->project}-".json_encode($parameters);
 
-        if (($funnels = $this->cache->get($cacheKey))) {
+        if (($funnels = $this->cache()->get($cacheKey))) {
             return $funnels;
         }
 
         $document = $this->funnelRepository->all($parameters, $headers);
         if ($document instanceof InvalidResponseDocument || $document->hasErrors()) {
-            $this->logger?->error('Conductor failed to load funnels', ['document' => $document->toArray()]);
+            $this->log()?->error('Conductor failed to load funnels', ['document' => $document->toArray()]);
 
             return new Collection();
         }
 
         $funnels = Collection::make($document->getData());
-        $this->cache->set(
+        $this->cache()->set(
             $cacheKey,
             $funnels,
             DateInterval::createFromDateString("{$this->cacheTtlSeconds} seconds")
@@ -90,15 +90,31 @@ class Conductor implements LoggerAwareInterface
         return $funnels;
     }
 
-    public function setLogger(?LoggerInterface $logger = null): void
-    {
-        $this->logger = $logger;
-    }
-
     public function asProject(string $project): self
     {
         $this->project = $project;
 
         return $this;
+    }
+
+    protected function log(): ?LoggerInterface
+    {
+        $driver = config('conductor.log.driver');
+
+        return match ($driver) {
+            null => null,
+            'default' => $this->log->driver(),
+            default => $this->log->driver($driver),
+        };
+    }
+
+    protected function cache(): CacheInterface
+    {
+        $driver = config('conductor.cache.driver', 'array');
+
+        return match ($driver) {
+            'default' => $this->cache->driver(),
+            default => $this->cache->driver($driver),
+        };
     }
 }

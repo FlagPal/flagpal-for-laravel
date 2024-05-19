@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Cache\CacheManager;
+use Illuminate\Log\LogManager;
 use Psr\Log\LoggerInterface;
-use Psr\SimpleCache\CacheInterface;
 use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
 use Rapkis\Conductor\Conductor;
 use Rapkis\Conductor\Repositories\FunnelRepository;
@@ -15,26 +15,18 @@ use Swis\JsonApi\Client\Interfaces\DocumentInterface;
 use Swis\JsonApi\Client\ItemHydrator;
 
 it('loads funnels from API', function () {
-    $config = [
-        'default_project' => 'test project',
-        'projects' => [
-            'test project' => [
-                'name' => 'test project',
-                'bearer_token' => 'foo bar secret',
-            ],
-        ],
-    ];
     $funnelRepository = $this->createMock(FunnelRepository::class);
 
     $conductor = new Conductor(
-        $config,
         $funnelRepository,
         $this->createStub(ResolveFeaturesFromFunnel::class),
-        $this->createStub(CacheInterface::class),
+        app(CacheManager::class),
+        $this->createStub(LogManager::class),
     );
 
     $document = $this->createStub(DocumentInterface::class);
     $document->method('getData')->willReturn(new Collection());
+
     $funnelRepository->expects($this->once())
         ->method('all')
         ->with([
@@ -46,30 +38,23 @@ it('loads funnels from API', function () {
     $conductor->resolveFeatures();
 });
 
-it('handles API errors', function (bool $hasLogger) {
-    $config = [
-        'default_project' => 'test project',
-        'projects' => [
-            'test project' => [
-                'name' => 'test project',
-                'bearer_token' => 'foo bar secret',
-            ],
-        ],
-    ];
+it('handles API errors', function (?string $logDriver) {
+    config(['conductor.log.driver' => $logDriver]);
 
+    $logManager = $this->createStub(LogManager::class);
     $logger = $this->createMock(LoggerInterface::class);
+    $logManager->method('driver')->willReturn($logger);
+
     $funnelRepository = $this->createStub(FunnelRepository::class);
-    $cache = $this->createMock(CacheInterface::class);
+
+    $cache = app(CacheManager::class);
+
     $conductor = new Conductor(
-        $config,
         $funnelRepository,
         $this->createStub(ResolveFeaturesFromFunnel::class),
         $cache,
+        $logManager,
     );
-
-    if ($hasLogger) {
-        $conductor->setLogger($logger);
-    }
 
     $errors = new ErrorCollection([new \Swis\JsonApi\Client\Error('123', null, '401', '401')]);
     $document = new Document();
@@ -78,48 +63,11 @@ it('handles API errors', function (bool $hasLogger) {
     $funnelRepository->method('all')
         ->willReturn($document);
 
-    if ($hasLogger) {
-        $logger->expects($this->once())
-            ->method('error')
-            ->with('Conductor failed to load funnels', ['document' => ['errors' => $errors->toArray()]]);
-    } else {
-        $logger->expects($this->never())->method('error');
-    }
-
-    $cache->expects($this->never())->method('set');
+    $logger->expects($logDriver ? $this->once() : $this->never())
+        ->method('error')
+        ->with('Conductor failed to load funnels', ['document' => ['errors' => $errors->toArray()]]);
 
     $conductor->resolveFeatures();
-})->with([
-    [false],
-    [true],
-]);
-
-it('caches funnels', function () {
-    $config = [
-        'default_project' => 'test project',
-        'projects' => [
-            'test project' => [
-                'name' => 'test project',
-                'bearer_token' => 'foo bar secret',
-            ],
-        ],
-    ];
-
-    $cache = app(Repository::class);
-    $funnelRepository = $this->createMock(FunnelRepository::class);
-
-    $conductor = new Conductor(
-        $config,
-        $funnelRepository,
-        $this->createStub(ResolveFeaturesFromFunnel::class),
-        $cache,
-    );
-
-    $document = $this->createStub(DocumentInterface::class);
-    $document->method('getData')->willReturn(new Collection());
-    $funnelRepository->expects($this->once())
-        ->method('all')
-        ->willReturn($document);
 
     $parameters = [
         'filter' => ['active' => true],
@@ -128,42 +76,73 @@ it('caches funnels', function () {
     $cacheKey = 'conductor-funnels-test project-'.json_encode($parameters);
 
     expect($cache->has($cacheKey))->toBeFalse();
+})->with([
+    ['default'],
+    ['null'],
+    [null],
+]);
+
+it('caches funnels', function (?string $driver) {
+    config(['conductor.cache.driver' => $driver]);
+
+    $cache = app(CacheManager::class);
+
+    $funnelRepository = $this->createMock(FunnelRepository::class);
+
+    $conductor = new Conductor(
+        $funnelRepository,
+        $this->createStub(ResolveFeaturesFromFunnel::class),
+        $cache,
+        $this->createStub(LogManager::class),
+    );
+
+    $document = $this->createStub(DocumentInterface::class);
+    $document->method('getData')->willReturn(new Collection());
+
+    $funnelRepository->expects($this->once())
+        ->method('all')
+        ->willReturn($document);
+
+    $parameters = [
+        'filter' => ['active' => true],
+        'include' => 'featureSets,metrics',
+    ];
+    $cacheKey = 'conductor-funnels-My Project-'.json_encode($parameters);
+
+    expect($cache->has($cacheKey))->toBeFalse();
+
     $conductor->resolveFeatures();
+
     expect($cache->has($cacheKey))->toBeTrue()
         ->and($cache->get($cacheKey))
         ->toBeInstanceOf(\Illuminate\Support\Collection::class);
 
     // won't hit the API a second time
     $conductor->resolveFeatures();
-});
+})->with([
+    ['default'],
+    ['array'],
+    [null],
+]);
 
 it('resolves features from all funnels', function () {
-    $config = [
-        'default_project' => 'test project',
-        'projects' => [
-            'test project' => [
-                'name' => 'test project',
-                'bearer_token' => 'foo bar secret',
-            ],
-        ],
-    ];
-
     $resolver = $this->createMock(ResolveFeaturesFromFunnel::class);
-    /** @var CacheInterface $cache */
-    $cache = app(Repository::class);
+
+    /** @var CacheManager $cache */
+    $cache = app(CacheManager::class);
 
     $conductor = new Conductor(
-        $config,
         $this->createStub(FunnelRepository::class),
         $resolver,
         $cache,
+        $this->createStub(LogManager::class),
     );
 
     $parameters = [
         'filter' => ['active' => true],
         'include' => 'featureSets,metrics',
     ];
-    $cacheKey = 'conductor-funnels-test project-'.json_encode($parameters);
+    $cacheKey = 'conductor-funnels-My Project-'.json_encode($parameters);
 
     /** @var ItemHydrator $hydrator */
     $hydrator = app(ItemHydrator::class);
@@ -200,31 +179,21 @@ it('resolves features from all funnels', function () {
 });
 
 it('skips funnel if no set was resolved', function () {
-    $config = [
-        'default_project' => 'test project',
-        'projects' => [
-            'test project' => [
-                'name' => 'test project',
-                'bearer_token' => 'foo bar secret',
-            ],
-        ],
-    ];
-
-    /** @var CacheInterface $cache */
-    $cache = app(Repository::class);
+    /** @var CacheManager $cache */
+    $cache = app(CacheManager::class);
 
     $conductor = new Conductor(
-        $config,
         $this->createStub(FunnelRepository::class),
         $this->createStub(ResolveFeaturesFromFunnel::class),
         $cache,
+        $this->createStub(LogManager::class),
     );
 
     $parameters = [
         'filter' => ['active' => true],
         'include' => 'featureSets,metrics',
     ];
-    $cacheKey = 'conductor-funnels-test project-'.json_encode($parameters);
+    $cacheKey = 'conductor-funnels-My Project-'.json_encode($parameters);
 
     /** @var ItemHydrator $hydrator */
     $hydrator = app(ItemHydrator::class);
@@ -252,9 +221,9 @@ it('skips funnel if no set was resolved', function () {
 });
 
 it('switches between projects', function () {
-    $config = [
-        'default_project' => 'test project',
-        'projects' => [
+    config([
+        'conductor.default_project' => 'test project',
+        'conductor.projects' => [
             'test project' => [
                 'name' => 'test project',
                 'bearer_token' => 'foo bar secret',
@@ -264,16 +233,16 @@ it('switches between projects', function () {
                 'bearer_token' => 'other project secret',
             ],
         ],
-    ];
+    ]);
 
-    $cache = app(Repository::class);
+    $cache = app(CacheManager::class);
     $funnelRepository = $this->createMock(FunnelRepository::class);
 
     $conductor = new Conductor(
-        $config,
         $funnelRepository,
         $this->createStub(ResolveFeaturesFromFunnel::class),
         $cache,
+        $this->createStub(LogManager::class),
     );
 
     $document = $this->createStub(DocumentInterface::class);
