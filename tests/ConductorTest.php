@@ -2,12 +2,18 @@
 
 use Illuminate\Cache\CacheManager;
 use Illuminate\Log\LogManager;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Psr\Log\LoggerInterface;
 use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
 use Rapkis\Conductor\Conductor;
+use Rapkis\Conductor\EnteredFunnel;
 use Rapkis\Conductor\Repositories\FunnelRepository;
+use Rapkis\Conductor\Repositories\MetricTimeSeriesRepository;
 use Rapkis\Conductor\Resources\FeatureSet;
 use Rapkis\Conductor\Resources\Funnel;
+use Rapkis\Conductor\Resources\Metric;
+use Rapkis\Conductor\Resources\MetricTimeSeries;
 use Swis\JsonApi\Client\Collection;
 use Swis\JsonApi\Client\Document;
 use Swis\JsonApi\Client\ErrorCollection;
@@ -17,12 +23,8 @@ use Swis\JsonApi\Client\ItemHydrator;
 it('loads funnels from API', function () {
     $funnelRepository = $this->createMock(FunnelRepository::class);
 
-    $conductor = new Conductor(
-        $funnelRepository,
-        $this->createStub(ResolveFeaturesFromFunnel::class),
-        app(CacheManager::class),
-        $this->createStub(LogManager::class),
-    );
+    /** @var Conductor $conductor */
+    $conductor = $this->app->make(Conductor::class, ['funnelRepository' => $funnelRepository]);
 
     $document = $this->createStub(DocumentInterface::class);
     $document->method('getData')->willReturn(new Collection());
@@ -42,19 +44,16 @@ it('handles API errors', function (?string $logDriver) {
     config(['conductor.log.driver' => $logDriver]);
 
     $logManager = $this->createStub(LogManager::class);
+
     $logger = $this->createMock(LoggerInterface::class);
     $logManager->method('driver')->willReturn($logger);
 
     $funnelRepository = $this->createStub(FunnelRepository::class);
 
-    $cache = app(CacheManager::class);
-
-    $conductor = new Conductor(
-        $funnelRepository,
-        $this->createStub(ResolveFeaturesFromFunnel::class),
-        $cache,
-        $logManager,
-    );
+    $conductor = $this->app->make(Conductor::class, [
+        'funnelRepository' => $funnelRepository,
+        'log' => $logManager,
+    ]);
 
     $errors = new ErrorCollection([new \Swis\JsonApi\Client\Error('123', null, '401', '401')]);
     $document = new Document();
@@ -75,7 +74,7 @@ it('handles API errors', function (?string $logDriver) {
     ];
     $cacheKey = 'conductor-funnels-test project-'.json_encode($parameters);
 
-    expect($cache->has($cacheKey))->toBeFalse();
+    expect(Cache::has($cacheKey))->toBeFalse();
 })->with([
     ['default'],
     ['null'],
@@ -89,12 +88,7 @@ it('caches funnels', function (?string $driver) {
 
     $funnelRepository = $this->createMock(FunnelRepository::class);
 
-    $conductor = new Conductor(
-        $funnelRepository,
-        $this->createStub(ResolveFeaturesFromFunnel::class),
-        $cache,
-        $this->createStub(LogManager::class),
-    );
+    $conductor = $this->app->make(Conductor::class, ['funnelRepository' => $funnelRepository]);
 
     $document = $this->createStub(DocumentInterface::class);
     $document->method('getData')->willReturn(new Collection());
@@ -131,12 +125,8 @@ it('resolves features from all funnels', function () {
     /** @var CacheManager $cache */
     $cache = app(CacheManager::class);
 
-    $conductor = new Conductor(
-        $this->createStub(FunnelRepository::class),
-        $resolver,
-        $cache,
-        $this->createStub(LogManager::class),
-    );
+    /** @var Conductor $conductor */
+    $conductor = $this->app->make(Conductor::class, ['resolver' => $resolver]);
 
     $parameters = [
         'filter' => ['active' => true],
@@ -173,8 +163,8 @@ it('resolves features from all funnels', function () {
         'current' => 'features',
         'test' => 'foo',
         'bar' => ['baz'],
-    ])->and($conductor->getEnteredFunnels())->toBe([
-        '1234' => ['5678' => ['test' => 'foo', 'bar' => ['baz']]],
+    ])->and($conductor->getEnteredFunnels())->toEqual([
+        '1234' => new EnteredFunnel($funnel, $funnel->featureSets->first()),
     ]);
 });
 
@@ -182,12 +172,7 @@ it('skips funnel if no set was resolved', function () {
     /** @var CacheManager $cache */
     $cache = app(CacheManager::class);
 
-    $conductor = new Conductor(
-        $this->createStub(FunnelRepository::class),
-        $this->createStub(ResolveFeaturesFromFunnel::class),
-        $cache,
-        $this->createStub(LogManager::class),
-    );
+    $conductor = $this->app->make(Conductor::class);
 
     $parameters = [
         'filter' => ['active' => true],
@@ -202,7 +187,7 @@ it('skips funnel if no set was resolved', function () {
     $funnel = $hydrator->hydrate(new Funnel(), [
         Funnel::ACTIVE => true,
         Funnel::PERCENT => 100,
-        Funnel::RULES => [],
+        Funnel::RULES => [['feature' => 'current', 'rule' => 'equal', 'value' => null]],
         'featureSets' => [
             [
                 'id' => '5678',
@@ -235,15 +220,9 @@ it('switches between projects', function () {
         ],
     ]);
 
-    $cache = app(CacheManager::class);
     $funnelRepository = $this->createMock(FunnelRepository::class);
 
-    $conductor = new Conductor(
-        $funnelRepository,
-        $this->createStub(ResolveFeaturesFromFunnel::class),
-        $cache,
-        $this->createStub(LogManager::class),
-    );
+    $conductor = $this->app->make(Conductor::class, ['funnelRepository' => $funnelRepository]);
 
     $document = $this->createStub(DocumentInterface::class);
     $document->method('getData')->willReturn(new Collection());
@@ -262,3 +241,41 @@ it('switches between projects', function () {
         ->asProject('other project')
         ->resolveFeatures();
 });
+
+it('records a metric', function (bool $hasErrors) {
+    $metricTimeSeriesRepository = $this->createMock(MetricTimeSeriesRepository::class);
+
+    /** @var Conductor $conductor */
+    $conductor = $this->app->make(Conductor::class, ['metricTimeSeriesRepository' => $metricTimeSeriesRepository]);
+
+    $document = new Document();
+    if ($hasErrors) {
+        $errors = new ErrorCollection([new \Swis\JsonApi\Client\Error('123', null, '401', '401')]);
+        $document->setErrors($errors);
+    }
+
+    $metric = (new Metric())->setId('123');
+    $set = (new FeatureSet())->setId('123');
+    $payload = app(ItemHydrator::class)->hydrate(new MetricTimeSeries(), [
+        MetricTimeSeries::METRIC => $metric->toJsonApiArray(),
+        MetricTimeSeries::FEATURE_SET => $set->toJsonApiArray(),
+        MetricTimeSeries::VALUE => 100,
+        MetricTimeSeries::TIME_SEGMENT => $date = Carbon::now(),
+    ]);
+
+    $metricTimeSeriesRepository->expects($this->once())
+        ->method('create')
+        ->with($payload)
+        ->willReturn($document);
+
+    $success = $conductor->recordMetric($metric, $set, 100, $date);
+
+    if ($hasErrors) {
+        expect($success)->toBeFalse();
+    } else {
+        expect($success)->toBeTrue();
+    }
+})->with([
+    [false],
+    [true],
+]);

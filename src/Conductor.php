@@ -3,6 +3,7 @@
 namespace Rapkis\Conductor;
 
 use Carbon\CarbonInterval;
+use DateTimeInterface;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Log\LogManager;
 use Illuminate\Support\Collection;
@@ -10,8 +11,13 @@ use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
 use Rapkis\Conductor\Repositories\FunnelRepository;
+use Rapkis\Conductor\Repositories\MetricTimeSeriesRepository;
+use Rapkis\Conductor\Resources\FeatureSet;
 use Rapkis\Conductor\Resources\Funnel;
+use Rapkis\Conductor\Resources\Metric;
+use Rapkis\Conductor\Resources\MetricTimeSeries;
 use Swis\JsonApi\Client\InvalidResponseDocument;
+use Swis\JsonApi\Client\ItemHydrator;
 
 class Conductor
 {
@@ -20,14 +26,16 @@ class Conductor
 
     private string $project;
 
-    /** @var array<string,array<string, array>> */
+    /** @var array<EnteredFunnel> */
     private array $entered = [];
 
     private int $cacheTtlSeconds;
 
     public function __construct(
         protected readonly FunnelRepository $funnelRepository,
+        protected readonly MetricTimeSeriesRepository $metricTimeSeriesRepository,
         protected readonly ResolveFeaturesFromFunnel $resolver,
+        protected readonly ItemHydrator $itemHydrator,
         protected readonly CacheManager $cache,
         protected LogManager $log,
     ) {
@@ -47,7 +55,7 @@ class Conductor
                 return $features;
             }
 
-            $this->entered[$funnel->getId()] = [$set->getId() => $set->features];
+            $this->entered[$funnel->getId()] = new EnteredFunnel($funnel, $set);
 
             return array_merge($features, $set->features);
         }, $currentFeatures);
@@ -60,20 +68,39 @@ class Conductor
         return $this->entered;
     }
 
+    public function recordMetric(Metric $metric, FeatureSet $set, int $value, ?DateTimeInterface $dateTime = null): bool
+    {
+        $item = $this->itemHydrator->hydrate(new MetricTimeSeries(), [
+            MetricTimeSeries::METRIC => $metric->toJsonApiArray(),
+            MetricTimeSeries::FEATURE_SET => $set->toJsonApiArray(),
+            MetricTimeSeries::VALUE => $value,
+            MetricTimeSeries::TIME_SEGMENT => $dateTime?->format('Y-m-d H:i:s') ?? date('Y-m-d H:i:s'),
+        ]);
+
+        $document = $this->metricTimeSeriesRepository->create($item, [], $this->headers());
+
+        if ($document instanceof InvalidResponseDocument || $document->hasErrors()) {
+            $this->log()?->error('Conductor failed to record a metric', ['document' => $document->toArray()]);
+
+            return false;
+        }
+
+        return true;
+    }
+
     protected function loadFunnels(): Collection
     {
         $parameters = [
             'filter' => ['active' => true],
             'include' => 'featureSets,metrics',
         ];
-        $headers = ['Authorization' => "Bearer {$this->projects[$this->project]['bearer_token']}"];
         $cacheKey = "conductor-funnels-{$this->project}-".json_encode($parameters);
 
         if (($funnels = $this->cache()->get($cacheKey))) {
             return $funnels;
         }
 
-        $document = $this->funnelRepository->all($parameters, $headers);
+        $document = $this->funnelRepository->all($parameters, $this->headers());
         if ($document instanceof InvalidResponseDocument || $document->hasErrors()) {
             $this->log()?->error('Conductor failed to load funnels', ['document' => $document->toArray()]);
 
@@ -116,5 +143,10 @@ class Conductor
             'default' => $this->cache->driver(),
             default => $this->cache->driver($driver),
         };
+    }
+
+    protected function headers(): array
+    {
+        return ['Authorization' => "Bearer {$this->projects[$this->project]['bearer_token']}"];
     }
 }

@@ -7,6 +7,7 @@ use Rapkis\Conductor\Resources\Feature;
 use Rapkis\Conductor\Resources\FeatureSet;
 use Rapkis\Conductor\Resources\Funnel;
 use Rapkis\Conductor\Resources\Metric;
+use Rapkis\Conductor\Resources\MetricTimeSeries;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Swis\JsonApi\Client\Client;
@@ -27,6 +28,7 @@ class ConductorServiceProvider extends PackageServiceProvider
         Funnel::class,
         FeatureSet::class,
         Metric::class,
+        MetricTimeSeries::class,
     ];
 
     public function configurePackage(Package $package): void
