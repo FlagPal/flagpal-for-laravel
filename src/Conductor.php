@@ -10,8 +10,10 @@ use Illuminate\Support\Collection;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
+use Rapkis\Conductor\Repositories\ActorRepository;
 use Rapkis\Conductor\Repositories\FunnelRepository;
 use Rapkis\Conductor\Repositories\MetricTimeSeriesRepository;
+use Rapkis\Conductor\Resources\Actor;
 use Rapkis\Conductor\Resources\FeatureSet;
 use Rapkis\Conductor\Resources\Funnel;
 use Rapkis\Conductor\Resources\Metric;
@@ -34,6 +36,7 @@ class Conductor
     public function __construct(
         protected readonly FunnelRepository $funnelRepository,
         protected readonly MetricTimeSeriesRepository $metricTimeSeriesRepository,
+        protected readonly ActorRepository $actorRepository,
         protected readonly ResolveFeaturesFromFunnel $resolver,
         protected readonly ItemHydrator $itemHydrator,
         protected readonly CacheManager $cache,
@@ -86,6 +89,26 @@ class Conductor
         }
 
         return true;
+    }
+
+    public function getActor(string $reference): ?Actor
+    {
+        return $this->actorRepository->find($reference, [], $this->headers())->getData() ?: null;
+    }
+
+    public function saveActorFeatures(string $reference, array $features): Actor
+    {
+        $actor = $this->itemHydrator->hydrate(new Actor(), [
+            Actor::FEATURES => $features,
+        ]);
+        $actor->setId($reference);
+
+        return $this->saveActor($actor);
+    }
+
+    public function saveActor(Actor $actor): Actor
+    {
+        return $this->actorRepository->create($actor, [], $this->headers())->getData();
     }
 
     protected function loadFunnels(): Collection
