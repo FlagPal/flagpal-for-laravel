@@ -31,6 +31,6 @@ class ResolveFeaturesFromFunnel
         }
         $chosen = $this->raffle->draw($weightedChoices);
 
-        return $funnel->featureSets->firstWhere(fn (FeatureSet $set) => $set->getId() === (string)$chosen);
+        return $funnel->featureSets->firstWhere(fn (FeatureSet $set) => $set->getId() === (string) $chosen);
     }
 }
