@@ -37,8 +37,10 @@ it('resolves a feature set from funnel', function () {
     ])->willReturn('9999');
 
     $resolver = new ResolveFeaturesFromFunnel($validator, $raffle);
+    $set = $resolver($funnel, []);
 
-    expect($resolver($funnel, []))->toBeInstanceOf(FeatureSet::class);
+    expect($set)->toBeInstanceOf(FeatureSet::class)
+        ->and($set->getId())->toBe('9999');
 });
 
 it('skips funnel if disabled', function () {
