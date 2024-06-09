@@ -93,11 +93,15 @@ class Conductor
 
     public function getActor(string $reference): ?Actor
     {
-        return $this->actorRepository->find($reference, [], $this->headers())->getData() ?: null;
+        /** @var Actor|null $actor */
+        $actor = $this->actorRepository->find($reference, [], $this->headers())->getData();
+
+        return $actor;
     }
 
     public function saveActorFeatures(string $reference, array $features): Actor
     {
+        /** @var Actor $actor */
         $actor = $this->itemHydrator->hydrate(new Actor(), [
             Actor::FEATURES => $features,
         ]);
@@ -108,7 +112,10 @@ class Conductor
 
     public function saveActor(Actor $actor): Actor
     {
-        return $this->actorRepository->create($actor, [], $this->headers())->getData();
+        /** @var Actor $actor */
+        $actor = $this->actorRepository->create($actor, [], $this->headers())->getData();
+
+        return $actor;
     }
 
     protected function loadFunnels(): Collection
