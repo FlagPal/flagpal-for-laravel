@@ -3,6 +3,7 @@
 namespace Rapkis\Conductor;
 
 use Rapkis\Conductor\Contracts\Resources\Resource;
+use Rapkis\Conductor\Resources\Actor;
 use Rapkis\Conductor\Resources\Feature;
 use Rapkis\Conductor\Resources\FeatureSet;
 use Rapkis\Conductor\Resources\Funnel;
@@ -29,6 +30,7 @@ class ConductorServiceProvider extends PackageServiceProvider
         FeatureSet::class,
         Metric::class,
         MetricTimeSeries::class,
+        Actor::class,
     ];
 
     public function configurePackage(Package $package): void

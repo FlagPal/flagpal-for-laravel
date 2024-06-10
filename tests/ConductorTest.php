@@ -8,8 +8,10 @@ use Psr\Log\LoggerInterface;
 use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
 use Rapkis\Conductor\Conductor;
 use Rapkis\Conductor\EnteredFunnel;
+use Rapkis\Conductor\Repositories\ActorRepository;
 use Rapkis\Conductor\Repositories\FunnelRepository;
 use Rapkis\Conductor\Repositories\MetricTimeSeriesRepository;
+use Rapkis\Conductor\Resources\Actor;
 use Rapkis\Conductor\Resources\FeatureSet;
 use Rapkis\Conductor\Resources\Funnel;
 use Rapkis\Conductor\Resources\Metric;
@@ -279,3 +281,55 @@ it('records a metric', function (bool $hasErrors) {
     [false],
     [true],
 ]);
+
+it('gets actor by reference', function (DocumentInterface $repositoryResult, ?Actor $expected) {
+    $actorRepository = $this->createMock(ActorRepository::class);
+
+    /** @var Conductor $conductor */
+    $conductor = $this->app->make(Conductor::class, ['actorRepository' => $actorRepository]);
+
+    $actorRepository->expects($this->once())
+        ->method('find')
+        ->with('test_actor')
+        ->willReturn($repositoryResult);
+
+    expect($conductor->getActor('test_actor'))->toEqual($expected);
+})->with([
+    [(new Document())->setData(new Actor()), new Actor()],
+    [new Document(), null],
+]);
+
+it('saves an actor', function () {
+    $actorRepository = $this->createMock(ActorRepository::class);
+
+    /** @var Conductor $conductor */
+    $conductor = $this->app->make(Conductor::class, ['actorRepository' => $actorRepository]);
+
+    $actor = new Actor();
+
+    $actorRepository->expects($this->once())
+        ->method('create')
+        ->with($actor)
+        ->willReturn((new Document())->setData($actor));
+
+    expect($conductor->saveActor($actor))->toBe($actor);
+});
+
+it('saves features for an actor', function () {
+    $actorRepository = $this->createMock(ActorRepository::class);
+
+    /** @var Conductor $conductor */
+    $conductor = $this->app->make(Conductor::class, ['actorRepository' => $actorRepository]);
+
+    /** @var ItemHydrator $itemHydrator */
+    $itemHydrator = app(ItemHydrator::class);
+    $actor = $itemHydrator->hydrate(new Actor(), [Actor::FEATURES => ['foo_feature' => 'foo_value']]);
+    $actor->setId('test_actor');
+
+    $actorRepository->expects($this->once())
+        ->method('create')
+        ->with($actor)
+        ->willReturn((new Document())->setData($actor));
+
+    expect($conductor->saveActorFeatures('test_actor', ['foo_feature' => 'foo_value']))->toBe($actor);
+});
