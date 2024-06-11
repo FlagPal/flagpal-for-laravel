@@ -1,10 +1,10 @@
 <?php
 
-namespace Rapkis\Conductor\Validation;
+namespace Rapkis\FlagPal\Validation;
 
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Factory;
-use Rapkis\Conductor\Contracts\Rules\Rule;
+use Rapkis\FlagPal\Contracts\Rules\Rule;
 
 class Validator
 {

@@ -1,12 +1,12 @@
 {
-    "name": "rapkis/laravel-conductor",
-    "description": "An SDK for using the Conductor in Laravel",
+    "name": "rapkis/flagpal-for-laravel",
+    "description": "An SDK for using the FlagPal in Laravel",
     "keywords": [
         "Rapolas Gruzdys",
         "laravel",
-        "laravel-conductor"
+        "flagpal-for-laravel"
     ],
-    "homepage": "https://github.com/rapkis/laravel-conductor",
+    "homepage": "https://github.com/rapkis/flagpal-for-laravel",
     "license": "MIT",
     "authors": [
         {
@@ -42,19 +42,19 @@
     },
     "autoload": {
         "psr-4": {
-            "Rapkis\\Conductor\\": "src/",
-            "Rapkis\\Conductor\\Database\\Factories\\": "database/factories/"
+            "Rapkis\\FlagPal\\": "src/",
+            "Rapkis\\FlagPal\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Rapkis\\Conductor\\Tests\\": "tests/",
+            "Rapkis\\FlagPal\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
     "scripts": {
         "post-autoload-dump": "@composer run prepare",
-        "clear": "@php vendor/bin/testbench package:purge-laravel-conductor --ansi",
+        "clear": "@php vendor/bin/testbench package:purge-flagpal-for-laravel --ansi",
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "build": [
             "@composer run prepare",
@@ -81,10 +81,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Rapkis\\Conductor\\ConductorServiceProvider"
+                "Rapkis\\FlagPal\\FlagPalServiceProvider"
             ],
             "aliases": {
-                "Conductor": "Rapkis\\Conductor\\Facades\\Conductor"
+                "FlagPal": "Rapkis\\FlagPal\\Facades\\FlagPal"
             }
         }
     },

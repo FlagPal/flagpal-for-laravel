@@ -1,15 +1,15 @@
-# An SDK for using the Conductor in Laravel
+# An SDK for using the FlagPal API in Laravel
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/rapkis/laravel-conductor.svg?style=flat-square)](https://packagist.org/packages/rapkis/laravel-conductor)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/rapkis/laravel-conductor/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/rapkis/laravel-conductor/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/rapkis/laravel-conductor/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/rapkis/laravel-conductor/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/rapkis/laravel-conductor.svg?style=flat-square)](https://packagist.org/packages/rapkis/laravel-conductor)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/rapkis/flagpal-for-laravel.svg?style=flat-square)](https://packagist.org/packages/rapkis/flagpal-for-laravel)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/rapkis/flagpal-for-laravel/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/rapkis/flagpal-for-laravel/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/rapkis/flagpal-for-laravel/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/rapkis/flagpal-for-laravel/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
+[![Total Downloads](https://img.shields.io/packagist/dt/rapkis/flagpal-for-laravel.svg?style=flat-square)](https://packagist.org/packages/rapkis/flagpal-for-laravel)
 
 This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
 
 ## Support us
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/laravel-conductor.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/laravel-conductor)
+[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/flagpal-for-laravel.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/flagpal-for-laravel)
 
 We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
 
@@ -20,20 +20,20 @@ We highly appreciate you sending us a postcard from your hometown, mentioning wh
 You can install the package via composer:
 
 ```bash
-composer require rapkis/laravel-conductor
+composer require rapkis/flagpal-for-laravel
 ```
 
 You can publish and run the migrations with:
 
 ```bash
-php artisan vendor:publish --tag="laravel-conductor-migrations"
+php artisan vendor:publish --tag="flagpal-for-laravel-migrations"
 php artisan migrate
 ```
 
 You can publish the config file with:
 
 ```bash
-php artisan vendor:publish --tag="laravel-conductor-config"
+php artisan vendor:publish --tag="flagpal-for-laravel-config"
 ```
 
 This is the contents of the published config file:
@@ -46,14 +46,14 @@ return [
 Optionally, you can publish the views using
 
 ```bash
-php artisan vendor:publish --tag="laravel-conductor-views"
+php artisan vendor:publish --tag="flagpal-for-laravel-views"
 ```
 
 ## Usage
 
 ```php
-$conductor = new Rapkis\Conductor();
-echo $conductor->echoPhrase('Hello, Rapkis!');
+$flagPal = new Rapkis\FlagPal\FlagPal();
+echo $flagPal->echoPhrase('Hello, Rapkis!');
 ```
 
 ## Testing

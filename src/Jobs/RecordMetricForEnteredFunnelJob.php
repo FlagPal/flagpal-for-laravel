@@ -1,14 +1,14 @@
 <?php
 
-namespace Rapkis\Conductor\Jobs;
+namespace Rapkis\FlagPal\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Rapkis\Conductor\Conductor;
-use Rapkis\Conductor\EnteredFunnel;
-use Rapkis\Conductor\Resources\Metric;
+use Rapkis\FlagPal\EnteredFunnel;
+use Rapkis\FlagPal\FlagPal;
+use Rapkis\FlagPal\Resources\Metric;
 
 class RecordMetricForEnteredFunnelJob implements ShouldQueue
 {
@@ -24,7 +24,7 @@ class RecordMetricForEnteredFunnelJob implements ShouldQueue
     ) {
     }
 
-    public function handle(Conductor $conductor): void
+    public function handle(FlagPal $flagPal): void
     {
         /** @var Metric|null $metric */
         $metric = $this->entry->funnel->metrics->firstWhere(Metric::NAME, $this->metric);
@@ -32,10 +32,10 @@ class RecordMetricForEnteredFunnelJob implements ShouldQueue
             return;
         }
 
-        $success = $conductor->recordMetric($metric, $this->entry->set, $this->value, $this->dateTime);
+        $success = $flagPal->recordMetric($metric, $this->entry->set, $this->value, $this->dateTime);
 
         if (! $success) {
-            $this->fail('Conductor failed to record a metric');
+            $this->fail('FlagPal failed to record a metric');
         }
     }
 }

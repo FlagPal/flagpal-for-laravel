@@ -1,8 +1,8 @@
 <?php
 
-namespace Rapkis\Conductor\Resources;
+namespace Rapkis\FlagPal\Resources;
 
-use Rapkis\Conductor\Contracts\Resources\Resource;
+use Rapkis\FlagPal\Contracts\Resources\Resource;
 use Swis\JsonApi\Client\Interfaces\ManyRelationInterface;
 use Swis\JsonApi\Client\Item;
 use Swis\JsonApi\Client\Relations\HasOneRelation;

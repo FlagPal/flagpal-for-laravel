@@ -1,6 +1,6 @@
 <?php
 
-namespace Rapkis\Conductor\Support;
+namespace Rapkis\FlagPal\Support;
 
 class Raffle
 {

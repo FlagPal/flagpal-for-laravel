@@ -1,3 +1,3 @@
 # Changelog
 
-All notable changes to `laravel-conductor` will be documented in this file.
+All notable changes to `flagpal-for-laravel` will be documented in this file.

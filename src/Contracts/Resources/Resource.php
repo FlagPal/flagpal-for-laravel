@@ -1,6 +1,6 @@
 <?php
 
-namespace Rapkis\Conductor\Contracts\Resources;
+namespace Rapkis\FlagPal\Contracts\Resources;
 
 use Swis\JsonApi\Client\Interfaces\ItemInterface;
 

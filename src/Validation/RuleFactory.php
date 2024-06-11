@@ -1,9 +1,9 @@
 <?php
 
-namespace Rapkis\Conductor\Validation;
+namespace Rapkis\FlagPal\Validation;
 
 use Illuminate\Support\Str;
-use Rapkis\Conductor\Contracts\Rules\Rule;
+use Rapkis\FlagPal\Contracts\Rules\Rule;
 
 class RuleFactory
 {

@@ -1,14 +1,14 @@
 <?php
 
-namespace Rapkis\Conductor;
+namespace Rapkis\FlagPal;
 
-use Rapkis\Conductor\Contracts\Resources\Resource;
-use Rapkis\Conductor\Resources\Actor;
-use Rapkis\Conductor\Resources\Feature;
-use Rapkis\Conductor\Resources\FeatureSet;
-use Rapkis\Conductor\Resources\Funnel;
-use Rapkis\Conductor\Resources\Metric;
-use Rapkis\Conductor\Resources\MetricTimeSeries;
+use Rapkis\FlagPal\Contracts\Resources\Resource;
+use Rapkis\FlagPal\Resources\Actor;
+use Rapkis\FlagPal\Resources\Feature;
+use Rapkis\FlagPal\Resources\FeatureSet;
+use Rapkis\FlagPal\Resources\Funnel;
+use Rapkis\FlagPal\Resources\Metric;
+use Rapkis\FlagPal\Resources\MetricTimeSeries;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Swis\JsonApi\Client\Client;
@@ -22,7 +22,7 @@ use Swis\JsonApi\Client\Parsers\DocumentParser;
 use Swis\JsonApi\Client\Parsers\ResponseParser;
 use Swis\JsonApi\Client\TypeMapper;
 
-class ConductorServiceProvider extends PackageServiceProvider
+class FlagPalServiceProvider extends PackageServiceProvider
 {
     protected array $items = [
         Feature::class,
@@ -36,8 +36,8 @@ class ConductorServiceProvider extends PackageServiceProvider
     public function configurePackage(Package $package): void
     {
         $package
-            ->name('laravel-conductor')
-            ->hasConfigFile();
+            ->name('flagpal-for-laravel')
+            ->hasConfigFile('flagpal');
     }
 
     public function packageRegistered()
@@ -64,7 +64,7 @@ class ConductorServiceProvider extends PackageServiceProvider
         $this->app->extend(
             ClientInterface::class,
             static function (ClientInterface $client) {
-                $client->setBaseUri(rtrim(config('conductor.base_url'), '/').'/');
+                $client->setBaseUri(rtrim(config('flagpal.base_url'), '/').'/');
 
                 return $client;
             }

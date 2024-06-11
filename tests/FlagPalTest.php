@@ -5,17 +5,17 @@ use Illuminate\Log\LogManager;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Psr\Log\LoggerInterface;
-use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
-use Rapkis\Conductor\Conductor;
-use Rapkis\Conductor\EnteredFunnel;
-use Rapkis\Conductor\Repositories\ActorRepository;
-use Rapkis\Conductor\Repositories\FunnelRepository;
-use Rapkis\Conductor\Repositories\MetricTimeSeriesRepository;
-use Rapkis\Conductor\Resources\Actor;
-use Rapkis\Conductor\Resources\FeatureSet;
-use Rapkis\Conductor\Resources\Funnel;
-use Rapkis\Conductor\Resources\Metric;
-use Rapkis\Conductor\Resources\MetricTimeSeries;
+use Rapkis\FlagPal\Actions\ResolveFeaturesFromFunnel;
+use Rapkis\FlagPal\EnteredFunnel;
+use Rapkis\FlagPal\FlagPal;
+use Rapkis\FlagPal\Repositories\ActorRepository;
+use Rapkis\FlagPal\Repositories\FunnelRepository;
+use Rapkis\FlagPal\Repositories\MetricTimeSeriesRepository;
+use Rapkis\FlagPal\Resources\Actor;
+use Rapkis\FlagPal\Resources\FeatureSet;
+use Rapkis\FlagPal\Resources\Funnel;
+use Rapkis\FlagPal\Resources\Metric;
+use Rapkis\FlagPal\Resources\MetricTimeSeries;
 use Swis\JsonApi\Client\Collection;
 use Swis\JsonApi\Client\Document;
 use Swis\JsonApi\Client\ErrorCollection;
@@ -25,8 +25,8 @@ use Swis\JsonApi\Client\ItemHydrator;
 it('loads funnels from API', function () {
     $funnelRepository = $this->createMock(FunnelRepository::class);
 
-    /** @var Conductor $conductor */
-    $conductor = $this->app->make(Conductor::class, ['funnelRepository' => $funnelRepository]);
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, ['funnelRepository' => $funnelRepository]);
 
     $document = $this->createStub(DocumentInterface::class);
     $document->method('getData')->willReturn(new Collection());
@@ -39,11 +39,11 @@ it('loads funnels from API', function () {
         ])
         ->willReturn($document);
 
-    $conductor->resolveFeatures();
+    $flagPal->resolveFeatures();
 });
 
 it('handles API errors', function (?string $logDriver) {
-    config(['conductor.log.driver' => $logDriver]);
+    config(['flagpal.log.driver' => $logDriver]);
 
     $logManager = $this->createStub(LogManager::class);
 
@@ -52,7 +52,7 @@ it('handles API errors', function (?string $logDriver) {
 
     $funnelRepository = $this->createStub(FunnelRepository::class);
 
-    $conductor = $this->app->make(Conductor::class, [
+    $flagPal = $this->app->make(FlagPal::class, [
         'funnelRepository' => $funnelRepository,
         'log' => $logManager,
     ]);
@@ -66,15 +66,15 @@ it('handles API errors', function (?string $logDriver) {
 
     $logger->expects($logDriver ? $this->once() : $this->never())
         ->method('error')
-        ->with('Conductor failed to load funnels', ['document' => ['errors' => $errors->toArray()]]);
+        ->with('FlagPal failed to load funnels', ['document' => ['errors' => $errors->toArray()]]);
 
-    $conductor->resolveFeatures();
+    $flagPal->resolveFeatures();
 
     $parameters = [
         'filter' => ['active' => true],
         'include' => 'featureSets,metrics',
     ];
-    $cacheKey = 'conductor-funnels-test project-'.json_encode($parameters);
+    $cacheKey = 'flagpal-funnels-test project-'.json_encode($parameters);
 
     expect(Cache::has($cacheKey))->toBeFalse();
 })->with([
@@ -84,13 +84,13 @@ it('handles API errors', function (?string $logDriver) {
 ]);
 
 it('caches funnels', function (?string $driver) {
-    config(['conductor.cache.driver' => $driver]);
+    config(['flagpal.cache.driver' => $driver]);
 
     $cache = app(CacheManager::class);
 
     $funnelRepository = $this->createMock(FunnelRepository::class);
 
-    $conductor = $this->app->make(Conductor::class, ['funnelRepository' => $funnelRepository]);
+    $flagPal = $this->app->make(FlagPal::class, ['funnelRepository' => $funnelRepository]);
 
     $document = $this->createStub(DocumentInterface::class);
     $document->method('getData')->willReturn(new Collection());
@@ -103,18 +103,18 @@ it('caches funnels', function (?string $driver) {
         'filter' => ['active' => true],
         'include' => 'featureSets,metrics',
     ];
-    $cacheKey = 'conductor-funnels-My Project-'.json_encode($parameters);
+    $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
 
     expect($cache->has($cacheKey))->toBeFalse();
 
-    $conductor->resolveFeatures();
+    $flagPal->resolveFeatures();
 
     expect($cache->has($cacheKey))->toBeTrue()
         ->and($cache->get($cacheKey))
         ->toBeInstanceOf(\Illuminate\Support\Collection::class);
 
     // won't hit the API a second time
-    $conductor->resolveFeatures();
+    $flagPal->resolveFeatures();
 })->with([
     ['default'],
     ['array'],
@@ -127,14 +127,14 @@ it('resolves features from all funnels', function () {
     /** @var CacheManager $cache */
     $cache = app(CacheManager::class);
 
-    /** @var Conductor $conductor */
-    $conductor = $this->app->make(Conductor::class, ['resolver' => $resolver]);
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, ['resolver' => $resolver]);
 
     $parameters = [
         'filter' => ['active' => true],
         'include' => 'featureSets,metrics',
     ];
-    $cacheKey = 'conductor-funnels-My Project-'.json_encode($parameters);
+    $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
 
     /** @var ItemHydrator $hydrator */
     $hydrator = app(ItemHydrator::class);
@@ -159,13 +159,13 @@ it('resolves features from all funnels', function () {
         ->with($funnel, ['current' => 'features'])
         ->willReturn($funnel->featureSets->first());
 
-    $features = $conductor->resolveFeatures(['current' => 'features']);
+    $features = $flagPal->resolveFeatures(['current' => 'features']);
 
     expect($features)->toBe([
         'current' => 'features',
         'test' => 'foo',
         'bar' => ['baz'],
-    ])->and($conductor->getEnteredFunnels())->toEqual([
+    ])->and($flagPal->getEnteredFunnels())->toEqual([
         '1234' => new EnteredFunnel($funnel, $funnel->featureSets->first()),
     ]);
 });
@@ -174,13 +174,13 @@ it('skips funnel if no set was resolved', function () {
     /** @var CacheManager $cache */
     $cache = app(CacheManager::class);
 
-    $conductor = $this->app->make(Conductor::class);
+    $flagPal = $this->app->make(FlagPal::class);
 
     $parameters = [
         'filter' => ['active' => true],
         'include' => 'featureSets,metrics',
     ];
-    $cacheKey = 'conductor-funnels-My Project-'.json_encode($parameters);
+    $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
 
     /** @var ItemHydrator $hydrator */
     $hydrator = app(ItemHydrator::class);
@@ -200,17 +200,17 @@ it('skips funnel if no set was resolved', function () {
 
     $cache->set($cacheKey, new \Illuminate\Support\Collection([$funnel]));
 
-    $features = $conductor->resolveFeatures(['current' => 'features']);
+    $features = $flagPal->resolveFeatures(['current' => 'features']);
 
     expect($features)->toBe([
         'current' => 'features',
-    ])->and($conductor->getEnteredFunnels())->toBe([]);
+    ])->and($flagPal->getEnteredFunnels())->toBe([]);
 });
 
 it('switches between projects', function () {
     config([
-        'conductor.default_project' => 'test project',
-        'conductor.projects' => [
+        'flagpal.default_project' => 'test project',
+        'flagpal.projects' => [
             'test project' => [
                 'name' => 'test project',
                 'bearer_token' => 'foo bar secret',
@@ -224,7 +224,7 @@ it('switches between projects', function () {
 
     $funnelRepository = $this->createMock(FunnelRepository::class);
 
-    $conductor = $this->app->make(Conductor::class, ['funnelRepository' => $funnelRepository]);
+    $flagPal = $this->app->make(FlagPal::class, ['funnelRepository' => $funnelRepository]);
 
     $document = $this->createStub(DocumentInterface::class);
     $document->method('getData')->willReturn(new Collection());
@@ -239,7 +239,7 @@ it('switches between projects', function () {
         ->with($parameters, ['Authorization' => 'Bearer other project secret'])
         ->willReturn($document);
 
-    $conductor
+    $flagPal
         ->asProject('other project')
         ->resolveFeatures();
 });
@@ -247,8 +247,8 @@ it('switches between projects', function () {
 it('records a metric', function (bool $hasErrors) {
     $metricTimeSeriesRepository = $this->createMock(MetricTimeSeriesRepository::class);
 
-    /** @var Conductor $conductor */
-    $conductor = $this->app->make(Conductor::class, ['metricTimeSeriesRepository' => $metricTimeSeriesRepository]);
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, ['metricTimeSeriesRepository' => $metricTimeSeriesRepository]);
 
     $document = new Document();
     if ($hasErrors) {
@@ -270,7 +270,7 @@ it('records a metric', function (bool $hasErrors) {
         ->with($payload)
         ->willReturn($document);
 
-    $success = $conductor->recordMetric($metric, $set, 100, $date);
+    $success = $flagPal->recordMetric($metric, $set, 100, $date);
 
     if ($hasErrors) {
         expect($success)->toBeFalse();
@@ -285,15 +285,15 @@ it('records a metric', function (bool $hasErrors) {
 it('gets actor by reference', function (DocumentInterface $repositoryResult, ?Actor $expected) {
     $actorRepository = $this->createMock(ActorRepository::class);
 
-    /** @var Conductor $conductor */
-    $conductor = $this->app->make(Conductor::class, ['actorRepository' => $actorRepository]);
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, ['actorRepository' => $actorRepository]);
 
     $actorRepository->expects($this->once())
         ->method('find')
         ->with('test_actor')
         ->willReturn($repositoryResult);
 
-    expect($conductor->getActor('test_actor'))->toEqual($expected);
+    expect($flagPal->getActor('test_actor'))->toEqual($expected);
 })->with([
     [(new Document())->setData(new Actor()), new Actor()],
     [new Document(), null],
@@ -302,8 +302,8 @@ it('gets actor by reference', function (DocumentInterface $repositoryResult, ?Ac
 it('saves an actor', function () {
     $actorRepository = $this->createMock(ActorRepository::class);
 
-    /** @var Conductor $conductor */
-    $conductor = $this->app->make(Conductor::class, ['actorRepository' => $actorRepository]);
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, ['actorRepository' => $actorRepository]);
 
     $actor = new Actor();
 
@@ -312,14 +312,14 @@ it('saves an actor', function () {
         ->with($actor)
         ->willReturn((new Document())->setData($actor));
 
-    expect($conductor->saveActor($actor))->toBe($actor);
+    expect($flagPal->saveActor($actor))->toBe($actor);
 });
 
 it('saves features for an actor', function () {
     $actorRepository = $this->createMock(ActorRepository::class);
 
-    /** @var Conductor $conductor */
-    $conductor = $this->app->make(Conductor::class, ['actorRepository' => $actorRepository]);
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, ['actorRepository' => $actorRepository]);
 
     /** @var ItemHydrator $itemHydrator */
     $itemHydrator = app(ItemHydrator::class);
@@ -331,5 +331,5 @@ it('saves features for an actor', function () {
         ->with($actor)
         ->willReturn((new Document())->setData($actor));
 
-    expect($conductor->saveActorFeatures('test_actor', ['foo_feature' => 'foo_value']))->toBe($actor);
+    expect($flagPal->saveActorFeatures('test_actor', ['foo_feature' => 'foo_value']))->toBe($actor);
 });
