@@ -1,6 +1,6 @@
 <?php
 
-use Rapkis\Conductor\Support\Raffle;
+use Rapkis\FlagPal\Support\Raffle;
 
 test('can draw a winner', function () {
     $raffle = new Raffle();

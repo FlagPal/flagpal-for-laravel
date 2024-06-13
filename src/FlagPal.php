@@ -1,6 +1,6 @@
 <?php
 
-namespace Rapkis\Conductor;
+namespace Rapkis\FlagPal;
 
 use Carbon\CarbonInterval;
 use DateTimeInterface;
@@ -9,19 +9,19 @@ use Illuminate\Log\LogManager;
 use Illuminate\Support\Collection;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
-use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
-use Rapkis\Conductor\Repositories\ActorRepository;
-use Rapkis\Conductor\Repositories\FunnelRepository;
-use Rapkis\Conductor\Repositories\MetricTimeSeriesRepository;
-use Rapkis\Conductor\Resources\Actor;
-use Rapkis\Conductor\Resources\FeatureSet;
-use Rapkis\Conductor\Resources\Funnel;
-use Rapkis\Conductor\Resources\Metric;
-use Rapkis\Conductor\Resources\MetricTimeSeries;
+use Rapkis\FlagPal\Actions\ResolveFeaturesFromFunnel;
+use Rapkis\FlagPal\Repositories\ActorRepository;
+use Rapkis\FlagPal\Repositories\FunnelRepository;
+use Rapkis\FlagPal\Repositories\MetricTimeSeriesRepository;
+use Rapkis\FlagPal\Resources\Actor;
+use Rapkis\FlagPal\Resources\FeatureSet;
+use Rapkis\FlagPal\Resources\Funnel;
+use Rapkis\FlagPal\Resources\Metric;
+use Rapkis\FlagPal\Resources\MetricTimeSeries;
 use Swis\JsonApi\Client\InvalidResponseDocument;
 use Swis\JsonApi\Client\ItemHydrator;
 
-class Conductor
+class FlagPal
 {
     /** @var array<string,array> */
     private array $projects;
@@ -42,9 +42,9 @@ class Conductor
         protected readonly CacheManager $cache,
         protected LogManager $log,
     ) {
-        $this->projects = config('conductor.projects');
-        $this->project = config('conductor.default_project');
-        $this->cacheTtlSeconds = (int) config('conductor.cache.ttl', 60);
+        $this->projects = config('flagpal.projects');
+        $this->project = config('flagpal.default_project');
+        $this->cacheTtlSeconds = (int) config('flagpal.cache.ttl', 60);
     }
 
     public function resolveFeatures(array $currentFeatures = []): array
@@ -83,7 +83,7 @@ class Conductor
         $document = $this->metricTimeSeriesRepository->create($item, [], $this->headers());
 
         if ($document instanceof InvalidResponseDocument || $document->hasErrors()) {
-            $this->log()?->error('Conductor failed to record a metric', ['document' => $document->toArray()]);
+            $this->log()?->error('FlagPal failed to record a metric', ['document' => $document->toArray()]);
 
             return false;
         }
@@ -124,7 +124,7 @@ class Conductor
             'filter' => ['active' => true],
             'include' => 'featureSets,metrics',
         ];
-        $cacheKey = "conductor-funnels-{$this->project}-".json_encode($parameters);
+        $cacheKey = "flagpal-funnels-{$this->project}-".json_encode($parameters);
 
         if (($funnels = $this->cache()->get($cacheKey))) {
             return $funnels;
@@ -132,7 +132,7 @@ class Conductor
 
         $document = $this->funnelRepository->all($parameters, $this->headers());
         if ($document instanceof InvalidResponseDocument || $document->hasErrors()) {
-            $this->log()?->error('Conductor failed to load funnels', ['document' => $document->toArray()]);
+            $this->log()?->error('FlagPal failed to load funnels', ['document' => $document->toArray()]);
 
             return new Collection();
         }
@@ -156,7 +156,7 @@ class Conductor
 
     protected function log(): ?LoggerInterface
     {
-        $driver = config('conductor.log.driver');
+        $driver = config('flagpal.log.driver');
 
         return match ($driver) {
             null => null,
@@ -167,7 +167,7 @@ class Conductor
 
     protected function cache(): CacheInterface
     {
-        $driver = config('conductor.cache.driver', 'array');
+        $driver = config('flagpal.cache.driver', 'array');
 
         return match ($driver) {
             'default' => $this->cache->driver(),

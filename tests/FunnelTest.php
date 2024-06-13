@@ -1,6 +1,6 @@
 <?php
 
-use Rapkis\Conductor\Resources\Funnel;
+use Rapkis\FlagPal\Resources\Funnel;
 use Swis\JsonApi\Client\ItemHydrator;
 
 it('has feature sets as a relation', function () {

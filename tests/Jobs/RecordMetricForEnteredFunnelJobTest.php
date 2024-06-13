@@ -1,11 +1,11 @@
 <?php
 
-use Rapkis\Conductor\Conductor;
-use Rapkis\Conductor\EnteredFunnel;
-use Rapkis\Conductor\Jobs\RecordMetricForEnteredFunnelJob;
-use Rapkis\Conductor\Resources\FeatureSet;
-use Rapkis\Conductor\Resources\Funnel;
-use Rapkis\Conductor\Resources\Metric;
+use Rapkis\FlagPal\EnteredFunnel;
+use Rapkis\FlagPal\FlagPal;
+use Rapkis\FlagPal\Jobs\RecordMetricForEnteredFunnelJob;
+use Rapkis\FlagPal\Resources\FeatureSet;
+use Rapkis\FlagPal\Resources\Funnel;
+use Rapkis\FlagPal\Resources\Metric;
 use Swis\JsonApi\Client\ItemHydrator;
 
 it('records the metric for an entered funnel', function () {
@@ -24,14 +24,14 @@ it('records the metric for an entered funnel', function () {
     $entry = new EnteredFunnel($funnel, $funnel->featureSets->first());
     $job = new RecordMetricForEnteredFunnelJob($entry, 'conversion', 100);
 
-    $conductor = $this->createMock(Conductor::class);
-    $conductor->expects($this->once())->method('recordMetric')->with(
+    $flagPal = $this->createMock(FlagPal::class);
+    $flagPal->expects($this->once())->method('recordMetric')->with(
         $funnel->metrics->first(),
         $entry->set,
         100,
     );
 
-    $job->handle($conductor);
+    $job->handle($flagPal);
 });
 
 it('skips recording the metric if it is not tracked in the funnel', function () {
@@ -50,8 +50,8 @@ it('skips recording the metric if it is not tracked in the funnel', function () 
     $entry = new EnteredFunnel($funnel, $funnel->featureSets->first());
     $job = new RecordMetricForEnteredFunnelJob($entry, 'click', 100);
 
-    $conductor = $this->createMock(Conductor::class);
-    $conductor->expects($this->never())->method('recordMetric');
+    $flagPal = $this->createMock(FlagPal::class);
+    $flagPal->expects($this->never())->method('recordMetric');
 
-    $job->handle($conductor);
+    $job->handle($flagPal);
 });

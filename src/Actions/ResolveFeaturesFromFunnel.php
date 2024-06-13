@@ -1,11 +1,11 @@
 <?php
 
-namespace Rapkis\Conductor\Actions;
+namespace Rapkis\FlagPal\Actions;
 
-use Rapkis\Conductor\Resources\FeatureSet;
-use Rapkis\Conductor\Resources\Funnel;
-use Rapkis\Conductor\Support\Raffle;
-use Rapkis\Conductor\Validation\Validator;
+use Rapkis\FlagPal\Resources\FeatureSet;
+use Rapkis\FlagPal\Resources\Funnel;
+use Rapkis\FlagPal\Support\Raffle;
+use Rapkis\FlagPal\Validation\Validator;
 
 class ResolveFeaturesFromFunnel
 {

@@ -28,7 +28,7 @@
         </report>
     </coverage>
     <php>
-        <env name="CONDUCTOR_PROJECT" value="My Project"/>
+        <env name="FLAGPAL_PROJECT" value="My Project"/>
     </php>
     <logging>
         <junit outputFile="build/report.junit.xml"/>

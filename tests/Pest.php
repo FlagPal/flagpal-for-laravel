@@ -1,5 +1,5 @@
 <?php
 
-use Rapkis\Conductor\Tests\TestCase;
+use Rapkis\FlagPal\Tests\TestCase;
 
 uses(TestCase::class)->in(__DIR__);

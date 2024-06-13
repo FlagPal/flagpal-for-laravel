@@ -1,8 +1,8 @@
 <?php
 
-namespace Rapkis\Conductor\Validation\Rules;
+namespace Rapkis\FlagPal\Validation\Rules;
 
-use Rapkis\Conductor\Contracts\Rules\Rule;
+use Rapkis\FlagPal\Contracts\Rules\Rule;
 
 abstract class AbstractRule implements Rule
 {

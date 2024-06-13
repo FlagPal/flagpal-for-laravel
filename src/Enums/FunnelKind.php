@@ -1,6 +1,6 @@
 <?php
 
-namespace Rapkis\Conductor\Enums;
+namespace Rapkis\FlagPal\Enums;
 
 enum FunnelKind: string
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace Rapkis\Conductor\Resources;
+namespace Rapkis\FlagPal\Resources;
 
 use Illuminate\Support\Carbon;
-use Rapkis\Conductor\Contracts\Resources\Resource;
+use Rapkis\FlagPal\Contracts\Resources\Resource;
 use Swis\JsonApi\Client\Item;
 
 /**

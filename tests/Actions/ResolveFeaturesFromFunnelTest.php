@@ -1,10 +1,10 @@
 <?php
 
-use Rapkis\Conductor\Actions\ResolveFeaturesFromFunnel;
-use Rapkis\Conductor\Resources\FeatureSet;
-use Rapkis\Conductor\Resources\Funnel;
-use Rapkis\Conductor\Support\Raffle;
-use Rapkis\Conductor\Validation\Validator;
+use Rapkis\FlagPal\Actions\ResolveFeaturesFromFunnel;
+use Rapkis\FlagPal\Resources\FeatureSet;
+use Rapkis\FlagPal\Resources\Funnel;
+use Rapkis\FlagPal\Support\Raffle;
+use Rapkis\FlagPal\Validation\Validator;
 use Swis\JsonApi\Client\ItemHydrator;
 
 it('resolves a feature set from funnel', function () {

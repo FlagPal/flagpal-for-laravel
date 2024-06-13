@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Rapkis\Conductor\Validation\Rules;
+namespace Rapkis\FlagPal\Validation\Rules;
 
 class GreaterThanEqualsRule extends AbstractRule
 {

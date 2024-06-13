@@ -1,19 +1,19 @@
 <?php
 
-use Rapkis\Conductor\Resources\Feature;
-use Rapkis\Conductor\Resources\FeatureSet;
-use Rapkis\Conductor\Resources\Funnel;
-use Rapkis\Conductor\Resources\Metric;
+use Rapkis\FlagPal\Resources\Feature;
+use Rapkis\FlagPal\Resources\FeatureSet;
+use Rapkis\FlagPal\Resources\Funnel;
+use Rapkis\FlagPal\Resources\Metric;
 use Swis\JsonApi\Client\Interfaces\ClientInterface;
 use Swis\JsonApi\Client\Interfaces\ItemInterface;
 use Swis\JsonApi\Client\Interfaces\TypeMapperInterface;
 
 it('adds a missing slash for the api url', function () {
-    config(['conductor.base_url' => 'foo/bar']);
+    config(['flagpal.base_url' => 'foo/bar']);
     $client = app(ClientInterface::class);
     expect($client->getBaseUri())->toBe('foo/bar/');
 
-    config(['conductor.base_url' => 'foo/bar/']);
+    config(['flagpal.base_url' => 'foo/bar/']);
     $client = app(ClientInterface::class);
     expect($client->getBaseUri())->toBe('foo/bar/');
 });
