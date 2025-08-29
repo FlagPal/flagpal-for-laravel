@@ -7,15 +7,15 @@ use Rapkis\FlagPal\Support\Raffle;
 use Rapkis\FlagPal\Validation\Validator;
 use Swis\JsonApi\Client\ItemHydrator;
 
-it('resolves a feature set from funnel', function () {
+it('resolves a feature set from funnel', function (?array $rules) {
     /** @var ItemHydrator $hydrator */
     $hydrator = app(ItemHydrator::class);
 
     /** @var Funnel $funnel */
-    $funnel = $hydrator->hydrate(new Funnel(), [
+    $funnel = $hydrator->hydrate(new Funnel, [
         Funnel::ACTIVE => true,
         Funnel::PERCENT => 100,
-        Funnel::RULES => [],
+        Funnel::RULES => $rules,
         'featureSets' => [
             [
                 'id' => '8888',
@@ -41,10 +41,13 @@ it('resolves a feature set from funnel', function () {
 
     expect($set)->toBeInstanceOf(FeatureSet::class)
         ->and($set->getId())->toBe('9999');
-});
+})->with([
+    [[]],
+    [null],
+]);
 
 it('skips funnel if disabled', function () {
-    $funnel = new Funnel();
+    $funnel = new Funnel;
     $funnel2 = new Funnel([Funnel::ACTIVE => false]);
 
     $resolver = app(ResolveFeaturesFromFunnel::class);
@@ -74,7 +77,7 @@ it('skips funnel if validation fails', function () {
     $validator = $this->createStub(Validator::class);
     $validator->method('passes')->willReturn(false);
 
-    $resolver = new ResolveFeaturesFromFunnel($validator, new Raffle());
+    $resolver = new ResolveFeaturesFromFunnel($validator, new Raffle);
 
     expect($resolver($funnel, []))->toBeNull();
 });

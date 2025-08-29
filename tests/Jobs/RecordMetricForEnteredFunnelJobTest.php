@@ -10,7 +10,7 @@ use Swis\JsonApi\Client\ItemHydrator;
 
 it('records the metric for an entered funnel', function () {
     $hydrator = $this->app->make(ItemHydrator::class);
-    $funnel = $hydrator->hydrate(new Funnel(), [
+    $funnel = $hydrator->hydrate(new Funnel, [
         'featureSets' => [
             [
                 'id' => '5678',
@@ -36,7 +36,7 @@ it('records the metric for an entered funnel', function () {
 
 it('skips recording the metric if it is not tracked in the funnel', function () {
     $hydrator = $this->app->make(ItemHydrator::class);
-    $funnel = $hydrator->hydrate(new Funnel(), [
+    $funnel = $hydrator->hydrate(new Funnel, [
         'featureSets' => [
             [
                 'id' => '5678',

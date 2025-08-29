@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 use Rapkis\FlagPal\Actions\ResolveFeaturesFromFunnel;
 use Rapkis\FlagPal\Repositories\ActorRepository;
+use Rapkis\FlagPal\Repositories\FeatureRepository;
 use Rapkis\FlagPal\Repositories\FunnelRepository;
 use Rapkis\FlagPal\Repositories\MetricTimeSeriesRepository;
 use Rapkis\FlagPal\Resources\Actor;
@@ -37,6 +38,7 @@ class FlagPal
         protected readonly FunnelRepository $funnelRepository,
         protected readonly MetricTimeSeriesRepository $metricTimeSeriesRepository,
         protected readonly ActorRepository $actorRepository,
+        protected readonly FeatureRepository $featureRepository,
         protected readonly ResolveFeaturesFromFunnel $resolver,
         protected readonly ItemHydrator $itemHydrator,
         protected readonly CacheManager $cache,
@@ -47,10 +49,39 @@ class FlagPal
         $this->cacheTtlSeconds = (int) config('flagpal.cache.ttl', 60);
     }
 
+    public function definedFeatures(): array
+    {
+        $cacheKey = "flagpal-features-{$this->project}";
+
+        if (($features = $this->cache()->get($cacheKey))) {
+            return $features;
+        }
+
+        $this->log()?->debug('FlagPal fetching features');
+
+        $document = $this->featureRepository->all([], $this->headers());
+
+        if ($document instanceof InvalidResponseDocument || $document->hasErrors()) {
+            $this->log()?->error('FlagPal failed to fetch features', ['document' => $document->toArray()]);
+
+            return [];
+        }
+
+        $this->cache()->set(
+            $cacheKey,
+            $document->getData()->toArray(),
+            CarbonInterval::seconds($this->cacheTtlSeconds),
+        );
+
+        return $document->getData()->toArray();
+    }
+
     public function resolveFeatures(array $currentFeatures = []): array
     {
         $funnels = $this->loadFunnels();
 
+        $this->log()?->debug('FlagPal resolving features', $currentFeatures);
+        // todo validate $currentFeatures by their type or cast them to the correct type
         $features = $funnels->reduce(function (array $features, Funnel $funnel) {
             $set = ($this->resolver)($funnel, $features);
 
@@ -63,6 +94,8 @@ class FlagPal
             return array_merge($features, $set->features);
         }, $currentFeatures);
 
+        $this->log()?->debug('FlagPal resolved features', $features);
+
         return $features;
     }
 
@@ -73,7 +106,7 @@ class FlagPal
 
     public function recordMetric(Metric $metric, FeatureSet $set, int $value, ?DateTimeInterface $dateTime = null): bool
     {
-        $item = $this->itemHydrator->hydrate(new MetricTimeSeries(), [
+        $item = $this->itemHydrator->hydrate(new MetricTimeSeries, [
             MetricTimeSeries::METRIC => $metric->toJsonApiArray(),
             MetricTimeSeries::FEATURE_SET => $set->toJsonApiArray(),
             MetricTimeSeries::VALUE => $value,
@@ -102,7 +135,7 @@ class FlagPal
     public function saveActorFeatures(string $reference, array $features): Actor
     {
         /** @var Actor $actor */
-        $actor = $this->itemHydrator->hydrate(new Actor(), [
+        $actor = $this->itemHydrator->hydrate(new Actor, [
             Actor::FEATURES => $features,
         ]);
         $actor->setId($reference);
@@ -130,11 +163,13 @@ class FlagPal
             return $funnels;
         }
 
+        $this->log()?->debug('FlagPal loading funnels', ['parameters' => $parameters]);
+
         $document = $this->funnelRepository->all($parameters, $this->headers());
         if ($document instanceof InvalidResponseDocument || $document->hasErrors()) {
             $this->log()?->error('FlagPal failed to load funnels', ['document' => $document->toArray()]);
 
-            return new Collection();
+            return new Collection;
         }
 
         $funnels = Collection::make($document->getData());
@@ -152,6 +187,11 @@ class FlagPal
         $this->project = $project;
 
         return $this;
+    }
+
+    public function getProject(): string
+    {
+        return $this->project;
     }
 
     protected function log(): ?LoggerInterface

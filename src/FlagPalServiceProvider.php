@@ -2,7 +2,9 @@
 
 namespace Rapkis\FlagPal;
 
+use Illuminate\Contracts\Foundation\Application;
 use Rapkis\FlagPal\Contracts\Resources\Resource;
+use Rapkis\FlagPal\Pennant\FlagPalDriver;
 use Rapkis\FlagPal\Resources\Actor;
 use Rapkis\FlagPal\Resources\Feature;
 use Rapkis\FlagPal\Resources\FeatureSet;
@@ -45,6 +47,7 @@ class FlagPalServiceProvider extends PackageServiceProvider
         $this->registerSharedTypeMapper();
         $this->registerParsers();
         $this->registerClients();
+        $this->registerPennantDriver();
     }
 
     protected function registerSharedTypeMapper()
@@ -72,6 +75,15 @@ class FlagPalServiceProvider extends PackageServiceProvider
 
         $this->app->bind(ClientInterface::class, Client::class);
         $this->app->bind(DocumentClientInterface::class, DocumentClient::class);
+    }
+
+    protected function registerPennantDriver(): void
+    {
+        \Laravel\Pennant\Feature::extend(FlagPalDriver::NAME, function (Application $app, array $config) {
+            $project = $config['project'] ?? $app['config']['flagpal']['default_project'];
+
+            return new FlagPalDriver($app->make(FlagPal::class)->asProject($project));
+        });
     }
 
     public function packageBooted()

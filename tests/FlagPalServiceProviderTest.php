@@ -34,3 +34,31 @@ it('maps resources to ItemMapper', function () {
         expect($mapper->hasMapping($item->getType()))->toBeTrue();
     }
 });
+
+it('registers the pennant driver', function () {
+    config([
+        'flagpal.projects' => [
+            'foo' => [],
+            'bar' => [],
+        ],
+        'flagpal.default_project' => 'foo',
+        'pennant.stores' => [
+            'foo' => [
+                'driver' => 'flagpal',
+                'project' => null,
+            ],
+
+            'bar' => [
+                'driver' => 'flagpal',
+                'project' => 'Bar',
+            ],
+        ],
+    ]);
+
+    /** @var \Rapkis\FlagPal\Pennant\FlagPalDriver $driver */
+    $driver = \Laravel\Pennant\Feature::store('foo')->getDriver();
+    expect($driver->flagPal->getProject())->toBe('foo');
+
+    $driver = \Laravel\Pennant\Feature::store('bar')->getDriver();
+    expect($driver->flagPal->getProject())->toBe('Bar');
+});

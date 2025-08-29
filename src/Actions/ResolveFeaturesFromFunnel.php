@@ -12,15 +12,14 @@ class ResolveFeaturesFromFunnel
     public function __construct(
         private readonly Validator $validator,
         private readonly Raffle $raffle,
-    ) {
-    }
+    ) {}
 
     public function __invoke(Funnel $funnel, array $currentFeatures): ?FeatureSet
     {
         if (! $funnel->active || $funnel->percent < random_int(1, 100)) {
             return null;
         }
-        if (! $this->validator->passes($currentFeatures, $funnel->rules)) {
+        if (! $this->validator->passes($currentFeatures, $funnel->rules ?? [])) {
             return null;
         }
 

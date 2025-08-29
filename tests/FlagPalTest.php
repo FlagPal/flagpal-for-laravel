@@ -9,6 +9,7 @@ use Rapkis\FlagPal\Actions\ResolveFeaturesFromFunnel;
 use Rapkis\FlagPal\EnteredFunnel;
 use Rapkis\FlagPal\FlagPal;
 use Rapkis\FlagPal\Repositories\ActorRepository;
+use Rapkis\FlagPal\Repositories\FeatureRepository;
 use Rapkis\FlagPal\Repositories\FunnelRepository;
 use Rapkis\FlagPal\Repositories\MetricTimeSeriesRepository;
 use Rapkis\FlagPal\Resources\Actor;
@@ -29,7 +30,7 @@ it('loads funnels from API', function () {
     $flagPal = $this->app->make(FlagPal::class, ['funnelRepository' => $funnelRepository]);
 
     $document = $this->createStub(DocumentInterface::class);
-    $document->method('getData')->willReturn(new Collection());
+    $document->method('getData')->willReturn(new Collection);
 
     $funnelRepository->expects($this->once())
         ->method('all')
@@ -58,7 +59,7 @@ it('handles API errors', function (?string $logDriver) {
     ]);
 
     $errors = new ErrorCollection([new \Swis\JsonApi\Client\Error('123', null, '401', '401')]);
-    $document = new Document();
+    $document = new Document;
     $document->setErrors($errors);
 
     $funnelRepository->method('all')
@@ -93,7 +94,7 @@ it('caches funnels', function (?string $driver) {
     $flagPal = $this->app->make(FlagPal::class, ['funnelRepository' => $funnelRepository]);
 
     $document = $this->createStub(DocumentInterface::class);
-    $document->method('getData')->willReturn(new Collection());
+    $document->method('getData')->willReturn(new Collection);
 
     $funnelRepository->expects($this->once())
         ->method('all')
@@ -140,7 +141,7 @@ it('resolves features from all funnels', function () {
     $hydrator = app(ItemHydrator::class);
 
     /** @var Funnel $funnel */
-    $funnel = $hydrator->hydrate(new Funnel(), [
+    $funnel = $hydrator->hydrate(new Funnel, [
         Funnel::ACTIVE => true,
         Funnel::PERCENT => 100,
         Funnel::RULES => [],
@@ -186,7 +187,7 @@ it('skips funnel if no set was resolved', function () {
     $hydrator = app(ItemHydrator::class);
 
     /** @var Funnel $funnel */
-    $funnel = $hydrator->hydrate(new Funnel(), [
+    $funnel = $hydrator->hydrate(new Funnel, [
         Funnel::ACTIVE => true,
         Funnel::PERCENT => 100,
         Funnel::RULES => [['feature' => 'current', 'rule' => 'equal', 'value' => null]],
@@ -227,7 +228,7 @@ it('switches between projects', function () {
     $flagPal = $this->app->make(FlagPal::class, ['funnelRepository' => $funnelRepository]);
 
     $document = $this->createStub(DocumentInterface::class);
-    $document->method('getData')->willReturn(new Collection());
+    $document->method('getData')->willReturn(new Collection);
 
     $parameters = [
         'filter' => ['active' => true],
@@ -250,15 +251,15 @@ it('records a metric', function (bool $hasErrors) {
     /** @var FlagPal $flagPal */
     $flagPal = $this->app->make(FlagPal::class, ['metricTimeSeriesRepository' => $metricTimeSeriesRepository]);
 
-    $document = new Document();
+    $document = new Document;
     if ($hasErrors) {
         $errors = new ErrorCollection([new \Swis\JsonApi\Client\Error('123', null, '401', '401')]);
         $document->setErrors($errors);
     }
 
-    $metric = (new Metric())->setId('123');
-    $set = (new FeatureSet())->setId('123');
-    $payload = app(ItemHydrator::class)->hydrate(new MetricTimeSeries(), [
+    $metric = (new Metric)->setId('123');
+    $set = (new FeatureSet)->setId('123');
+    $payload = app(ItemHydrator::class)->hydrate(new MetricTimeSeries, [
         MetricTimeSeries::METRIC => $metric->toJsonApiArray(),
         MetricTimeSeries::FEATURE_SET => $set->toJsonApiArray(),
         MetricTimeSeries::VALUE => 100,
@@ -295,8 +296,8 @@ it('gets actor by reference', function (DocumentInterface $repositoryResult, ?Ac
 
     expect($flagPal->getActor('test_actor'))->toEqual($expected);
 })->with([
-    [(new Document())->setData(new Actor()), new Actor()],
-    [new Document(), null],
+    [(new Document)->setData(new Actor), new Actor],
+    [new Document, null],
 ]);
 
 it('saves an actor', function () {
@@ -305,12 +306,12 @@ it('saves an actor', function () {
     /** @var FlagPal $flagPal */
     $flagPal = $this->app->make(FlagPal::class, ['actorRepository' => $actorRepository]);
 
-    $actor = new Actor();
+    $actor = new Actor;
 
     $actorRepository->expects($this->once())
         ->method('create')
         ->with($actor)
-        ->willReturn((new Document())->setData($actor));
+        ->willReturn((new Document)->setData($actor));
 
     expect($flagPal->saveActor($actor))->toBe($actor);
 });
@@ -323,13 +324,149 @@ it('saves features for an actor', function () {
 
     /** @var ItemHydrator $itemHydrator */
     $itemHydrator = app(ItemHydrator::class);
-    $actor = $itemHydrator->hydrate(new Actor(), [Actor::FEATURES => ['foo_feature' => 'foo_value']]);
+    $actor = $itemHydrator->hydrate(new Actor, [Actor::FEATURES => ['foo_feature' => 'foo_value']]);
     $actor->setId('test_actor');
 
     $actorRepository->expects($this->once())
         ->method('create')
         ->with($actor)
-        ->willReturn((new Document())->setData($actor));
+        ->willReturn((new Document)->setData($actor));
 
     expect($flagPal->saveActorFeatures('test_actor', ['foo_feature' => 'foo_value']))->toBe($actor);
 });
+
+it('retrieves defined features from API', function () {
+    config([
+        'flagpal.default_project' => 'test project',
+        'flagpal.projects' => [
+            'test project' => [
+                'name' => 'test project',
+                'bearer_token' => 'test project secret',
+            ],
+        ],
+    ]);
+
+    $featureRepository = $this->createMock(FeatureRepository::class);
+
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, ['featureRepository' => $featureRepository]);
+
+    $collection = new Collection([
+        ['name' => 'feature1', 'value' => 'value1'],
+        ['name' => 'feature2', 'value' => 'value2'],
+    ]);
+
+    $document = $this->createStub(DocumentInterface::class);
+    $document->method('getData')->willReturn($collection);
+
+    $featureRepository->expects($this->once())
+        ->method('all')
+        ->with([], ['Authorization' => 'Bearer test project secret'])
+        ->willReturn($document);
+
+    $features = $flagPal->definedFeatures();
+
+    expect($features)->toBe([
+        ['name' => 'feature1', 'value' => 'value1'],
+        ['name' => 'feature2', 'value' => 'value2'],
+    ]);
+});
+
+it('caches defined features', function (?string $driver) {
+    config([
+        'flagpal.cache.driver' => $driver,
+        'flagpal.default_project' => 'test project',
+        'flagpal.projects' => [
+            'test project' => [
+                'name' => 'test project',
+                'bearer_token' => 'test project secret',
+            ],
+        ],
+    ]);
+
+    $cache = app(CacheManager::class);
+    $featureRepository = $this->createMock(FeatureRepository::class);
+
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, ['featureRepository' => $featureRepository]);
+
+    $collection = new Collection([
+        ['name' => 'feature1', 'value' => 'value1'],
+        ['name' => 'feature2', 'value' => 'value2'],
+    ]);
+
+    $document = $this->createStub(DocumentInterface::class);
+    $document->method('getData')->willReturn($collection);
+
+    $featureRepository->expects($this->once())
+        ->method('all')
+        ->willReturn($document);
+
+    $cacheKey = 'flagpal-features-test project';
+
+    expect($cache->has($cacheKey))->toBeFalse();
+
+    // First call should hit the API
+    $features1 = $flagPal->definedFeatures();
+
+    expect($cache->has($cacheKey))->toBeTrue()
+        ->and($cache->get($cacheKey))->toBe([
+            ['name' => 'feature1', 'value' => 'value1'],
+            ['name' => 'feature2', 'value' => 'value2'],
+        ]);
+
+    // Second call should use cached value
+    $features2 = $flagPal->definedFeatures();
+
+    expect($features1)->toBe($features2);
+})->with([
+    ['default'],
+    ['array'],
+    [null],
+]);
+
+it('handles API errors when retrieving defined features', function (?string $logDriver) {
+    config([
+        'flagpal.log.driver' => $logDriver,
+        'flagpal.default_project' => 'test project',
+        'flagpal.projects' => [
+            'test project' => [
+                'name' => 'test project',
+                'bearer_token' => 'test project secret',
+            ],
+        ],
+    ]);
+
+    $logManager = $this->createStub(LogManager::class);
+    $logger = $this->createMock(LoggerInterface::class);
+    $logManager->method('driver')->willReturn($logger);
+
+    $featureRepository = $this->createStub(FeatureRepository::class);
+
+    $flagPal = $this->app->make(FlagPal::class, [
+        'featureRepository' => $featureRepository,
+        'log' => $logManager,
+    ]);
+
+    $errors = new ErrorCollection([new \Swis\JsonApi\Client\Error('123', null, '401', '401')]);
+    $document = new Document;
+    $document->setErrors($errors);
+
+    $featureRepository->method('all')
+        ->willReturn($document);
+
+    $logger->expects($logDriver ? $this->once() : $this->never())
+        ->method('error')
+        ->with('FlagPal failed to fetch features', ['document' => ['errors' => $errors->toArray()]]);
+
+    $features = $flagPal->definedFeatures();
+
+    expect($features)->toBe([]);
+
+    $cacheKey = 'flagpal-features-test project';
+    expect(Cache::has($cacheKey))->toBeFalse();
+})->with([
+    ['default'],
+    ['null'],
+    [null],
+]);

@@ -6,7 +6,7 @@
         "laravel",
         "flagpal-for-laravel"
     ],
-    "homepage": "https://github.com/rapkis/flagpal-for-laravel",
+    "homepage": "https://github.com/flagpal/flagpal-for-laravel",
     "license": "MIT",
     "authors": [
         {
@@ -17,7 +17,8 @@
     ],
     "require": {
         "php": "^8.2",
-        "illuminate/contracts": "^10.0||^11.0",
+        "illuminate/contracts": "^11.0||^12.0",
+        "laravel/pennant": "^1.17",
         "php-http/discovery": "^1.9",
         "psr/http-client": "^1.0",
         "psr/http-client-implementation": "^1.0",
