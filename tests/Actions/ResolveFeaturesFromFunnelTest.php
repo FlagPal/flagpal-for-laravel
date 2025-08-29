@@ -7,7 +7,7 @@ use Rapkis\FlagPal\Support\Raffle;
 use Rapkis\FlagPal\Validation\Validator;
 use Swis\JsonApi\Client\ItemHydrator;
 
-it('resolves a feature set from funnel', function () {
+it('resolves a feature set from funnel', function (?array $rules) {
     /** @var ItemHydrator $hydrator */
     $hydrator = app(ItemHydrator::class);
 
@@ -15,7 +15,7 @@ it('resolves a feature set from funnel', function () {
     $funnel = $hydrator->hydrate(new Funnel(), [
         Funnel::ACTIVE => true,
         Funnel::PERCENT => 100,
-        Funnel::RULES => [],
+        Funnel::RULES => $rules,
         'featureSets' => [
             [
                 'id' => '8888',
@@ -41,7 +41,10 @@ it('resolves a feature set from funnel', function () {
 
     expect($set)->toBeInstanceOf(FeatureSet::class)
         ->and($set->getId())->toBe('9999');
-});
+})->with([
+    [[]],
+    [null]
+]);
 
 it('skips funnel if disabled', function () {
     $funnel = new Funnel();

@@ -83,8 +83,31 @@ At the core, it consists of three basic concepts:
 
 With this concept in mind, you can start resolving your features by chaining Experiments or Experiences one after another, and passing your features every time.
 
+#### Pennant
+As this is a Laravel package, it comes with a Laravel Pennant driver. FlagPal works completely with or without the driver. Examples will include usage for both cases.
+Keep in mind that FlagPal's goal is to give you **options**, while Pennant is rather opinionated. All of Pennant's and FlagPal's features coexist and may simply need a bit more verbose configuration.
+Since there is a lot of Laravel "magic" going behind the hood, please see this section on how to configure the Laravel Pennant driver.
+
 ### Basic Feature Resolution
 
+#### With Pennant
+
+```php
+use Laravel\Pennant\Feature;
+
+// Assuming you have the driver set up as default in config/pennant.php
+// Check if a specific feature is active. You define these features in FlagPal's dashboard
+if (Feature::active('new-api')) {
+    // Use the new API
+} else {
+    // Use the legacy API
+}
+
+// If the driver isn't default, you should call it every time: Feature::store('flagpal')->active('new-api')
+```
+
+
+#### Without Pennant
 ```php
 use Rapkis\FlagPal\FlagPal;
 
@@ -100,13 +123,6 @@ if (in_array('new-api', $features)) {
 } else {
     // Use the legacy API
 }
-
-// Check a value of a specific feature
-if ($features['checkout-flow'] === 'multi-step') {
-    // Render a multi-step checkout flow
-} else {
-    // Render the checkout within a single page
-}
 ```
 
 ### Rich Feature Values
@@ -114,6 +130,20 @@ if ($features['checkout-flow'] === 'multi-step') {
 You can define your features not only in binary states (active/inactive), but store rich values as well.
 There are multiple value types available, that should cover most of your needs: boolean, string, integer, array, date
 
+#### With Pennant
+
+```php
+use Laravel\Pennant\Feature;
+
+// Check a value of a specific feature
+if (Feature::value('checkout-flow') === 'multi-step') {
+    // Render a multi-step checkout flow
+} else {
+    // Render the checkout within a single page
+}
+```
+
+#### Without Pennant
 ```php
 use Rapkis\FlagPal\FlagPal;
 
@@ -133,6 +163,31 @@ if ($features['checkout-flow'] === 'multi-step') {
 
 ### Resolving with pre-existing features
 
+#### With Pennant
+
+```php
+use Laravel\Pennant\Feature;
+
+// Flags and values can be anything defined in your application
+// and have the same names defined in FlagPal's dashboard
+
+// These feature values can be retrieved from anywhere: your the database (like your User model), cache, other Pennant drivers. It's up to you
+$currentFeatures = [
+    'dark-mode' => true,
+    'checkout-flow' => 'single-page',
+    'trial-days-remaining' => 14,
+];
+
+$currentFeatures = new \Rapkis\FlagPal\Pennant\StatelessFeatures($currentFeatures);
+
+// Check if a specific feature is active
+if (Feature::for($currentFeatures)->active('show-trial-reminder')) {
+    // Trigger some promotional message
+}
+```
+
+#### Without Pennant
+
 ```php
 use Rapkis\FlagPal\FlagPal;
 
@@ -141,6 +196,8 @@ $flagPal = app(FlagPal::class);
 
 // Flags and values can be anything defined in your application
 // and have the same names defined in FlagPal's dashboard
+
+// These feature values can be retrieved from anywhere: your the database (like your User model), cache, other Pennant drivers. It's up to you
 $currentFeatures = [
     'dark-mode' => true,
     'checkout-flow' => 'single-page',
@@ -155,7 +212,52 @@ if (in_array('show-trial-reminder', $features)) {
 }
 ```
 
-### Working with Multiple Projects
+### Working with Multiple FlagPal Projects
+First, make sure you have your project configured in `config/flagpal.php`
+
+#### With Pennant
+To use multiple projects with Laravel Pennant, it's best to [register them as separate drivers](https://laravel.com/docs/master/pennant#registering-the-driver).
+You can skip registering them in your application's service provider, as this is already done by `FlagPalServiceProvider`. 
+You only need to define your projects in `config/pennant.php` 
+
+```php
+<?php
+
+// config/pennant.php
+
+return [
+    'stores' => [
+
+        // one of the default drivers from pennant
+        'array' => [
+            'driver' => 'array',
+        ],
+
+        // one of the default drivers from pennant
+        'database' => [
+            'driver' => 'database',
+            'connection' => null,
+            'table' => 'features',
+        ],
+        
+        // your first flagpal project driver
+        'flagpal' => [
+            'driver' => 'flagpal',
+            'project' => null // if not set, uses the default project from flagpal.php config
+        ],
+        // your second flagpal project driver
+        'flagpal_project_b' => [
+            'driver' => 'flagpal',
+            'project' => 'project_b',
+        ],
+    ],
+];
+
+// Usage
+Feature::driver('flagpal_project_b')->all();
+```
+
+#### Without Pennant
 
 ```php
 use Rapkis\FlagPal\FlagPal;
@@ -164,7 +266,7 @@ use Rapkis\FlagPal\FlagPal;
 $flagPal = app(FlagPal::class);
 
 // Switch to a specific project
-$features = $flagPal->asProject('Project B')->resolveFeatures();
+$features = $flagPal->asProject('project_b')->resolveFeatures();
 ```
 
 [//]: # TODO()
@@ -250,6 +352,105 @@ FlagPal logs errors when API operations fail. Configure the logging driver:
 'log' => [
     'driver' => 'single', // Use a specific log channel
 ],
+```
+
+## Laravel Pennant Integration
+
+This package includes a custom driver for [Laravel Pennant](https://github.com/laravel/pennant), Laravel's feature flag package. This allows you to use FlagPal within Laravel Pennant.
+
+### Configuration
+
+To use the FlagPal driver with Laravel Pennant, update your `config/pennant.php` file:
+
+```php
+'stores' => [
+    'flagpal' => [
+        'driver' => 'flagpal',
+    ],
+],
+```
+
+### Basic Usage
+
+Once configured, you can use Laravel Pennant as usual:
+
+```php
+use Laravel\Pennant\Feature;
+
+if (Feature::active('new-api')) {
+    // The feature is active
+}
+```
+
+### Scoped Features
+
+You can use scoped features with Pennant and FlagPal in multiple ways:
+- As a stateless collection of features (this is a building block of the following options)
+- Using feature flags from your application's storage (recommended)
+- Using FlagPal as a remote data warehouse (simpler than storing in your app, but less control)
+
+#### Stateless
+Using FlagPal in a stateless way is probably simplest to understand because it doesn't involve any Laravel "magic": you define your own Pennant scope, instead of relying on a default.
+This approach is most commonly used if you're using FlagPal as a remote configurator. For example, imagine you need to use different payment gateways, depending on your current APP's locale to provide the best customer experience:
+```php
+// Create your stateless features (your app's, or subsystem's configuration)
+$features = new \Rapkis\FlagPal\Pennant\StatelessFeatures(['locale' => \Illuminate\Support\Facades\App::getLocale()]);
+
+\Laravel\Pennant\Feature::driver('flagpal_payments_project')->for($features)->value('payment-gateway'); // could be 'stripe' for US, or 'boleto' for Brazil. All configured in FlagPal
+```
+
+#### Using flags from your app's storage
+
+This approach may be the most common use case when you want to keep track of features for specific models (like User, Team, Organization). This approach is used by Laravel Pennant itself and its DatabaseDriver.
+It's recommended to store features in your own storage (like a database), and provide those features as `StatelessFeatures` for FlagPal. For convenience, you can use the `features` database table that is already created by Pennant.
+Storing feature flags locally provides you with a few additional benefits:
+- You save a round trip to the FlagPal's API. This increases your application's performance, since you only need to query your database, which is usually quicker.
+- You may want to manipulate your data more directly (like performing custom analytical queries, or mass updating some values).
+
+To use this approach, your model only needs to implement the `Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures` interface.
+There's a trait that should cover most of the common use cases for storing feature flags, if you're using Pennant: `Rapkis\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase`
+
+```php
+class User extends Model
+{
+    use Laravel\Pennant\Concerns\HasFeatures;
+    use Rapkis\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase;
+}
+
+// Usage
+/** @var User $user */
+$user = User::first();
+$user->features()->set(['some-feature' => 'you-have-by-default']);
+
+// Resolving features via Pennant will automatically save them, if you have the method saveFlagPalFeatures() defined in your model/scope. It's the same how the DatabaseDriver works, but you can store it however YOU want.
+$user->features()->all(); // ['some-feature' => 'you-have-by-default', 'some-other-feature' => 'resolved-from-flagpal']
+```
+
+#### Using FlagPal as a remote data warehouse
+In this scenario, you can avoid storing any data on your own, and trust FlagPal to do it for you. In this case, you can instead use the trait `Rapkis\FlagPal\Pennant\Concerns\StoresFlagPalFeatures`.
+It calls the FlagPal API to save and retrieve features for your scope. Each scope must send a reference/identifier for itself, so that you can track which features belong to which scopes. 
+By default, the reference is generated through Pennant: `Feature::serializeScope($this)`. However, you can customize your reference by re-defining the method `getFlagPalReference()`. 
+This reference must uniquely identify your scope (User, Team, etc.) and will be used to automatically store and retrieve the features in FlagPal via the API:
+
+```php
+class User extends Model
+{
+    use Laravel\Pennant\Concerns\HasFeatures;
+    use Rapkis\FlagPal\Pennant\Concerns\StoresFlagPalFeatures;
+    
+    // Implementing the method manually
+    public function getFlagPalReference(): string 
+    {
+        return $this->email; // better yet, use ID, UUID, or some other more depersonalized property
+    }
+}
+
+// Usage
+
+$user = User::first();
+
+// resolving features will automatically store all their values for your scope in FlagPal itself.
+$user->features()->all(); // ['some-feature' => 'you-have-by-default', 'some-other-feature' => 'resolved-from-flagpal']
 ```
 
 ## Testing
