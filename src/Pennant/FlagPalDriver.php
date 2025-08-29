@@ -10,14 +10,13 @@ use Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures;
 use Rapkis\FlagPal\FlagPal;
 
 // todo features are cached in Pennant by serialized scope. We need to clear it every time before resolving features (maybe?)
-class FlagPalDriver implements Driver, DefinesFeaturesExternally
+class FlagPalDriver implements DefinesFeaturesExternally, Driver
 {
     public const NAME = 'flagpal';
 
     public function __construct(
         public readonly FlagPal $flagPal,
-    ) {
-    }
+    ) {}
 
     public function getEnteredFunnels(): array
     {
@@ -48,7 +47,7 @@ class FlagPalDriver implements Driver, DefinesFeaturesExternally
     public function get(string $feature, mixed $scope): mixed
     {
         $defined = $this->defined();
-        if (!in_array($feature, $defined)) {
+        if (! in_array($feature, $defined)) {
             return false;
         }
 
@@ -95,7 +94,7 @@ class FlagPalDriver implements Driver, DefinesFeaturesExternally
         }
     }
 
-    public function purge(array|null $features): void
+    public function purge(?array $features): void
     {
         throw new Exception('You can not purge FlagPal features! Remove them from FlagPal instead.');
     }

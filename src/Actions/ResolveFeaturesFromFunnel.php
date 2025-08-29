@@ -12,8 +12,7 @@ class ResolveFeaturesFromFunnel
     public function __construct(
         private readonly Validator $validator,
         private readonly Raffle $raffle,
-    ) {
-    }
+    ) {}
 
     public function __invoke(Funnel $funnel, array $currentFeatures): ?FeatureSet
     {

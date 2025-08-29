@@ -45,14 +45,14 @@ it('registers the pennant driver', function () {
         'pennant.stores' => [
             'foo' => [
                 'driver' => 'flagpal',
-                'project' => null
+                'project' => null,
             ],
 
             'bar' => [
                 'driver' => 'flagpal',
                 'project' => 'Bar',
             ],
-        ]
+        ],
     ]);
 
     /** @var \Rapkis\FlagPal\Pennant\FlagPalDriver $driver */

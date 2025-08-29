@@ -12,8 +12,6 @@ trait HasFlagPalReference
      *
      * Uses the Laravel Pennant scope serialization by default.
      * Override this method if you need a different reference format.
-     *
-     * @return string
      */
     public function getFlagPalReference(): string
     {

@@ -11,8 +11,7 @@ class Validator
     public function __construct(
         public readonly Factory $validator,
         public readonly RuleFactory $ruleFactory,
-    ) {
-    }
+    ) {}
 
     public function passes(array $features, array $rules): bool
     {

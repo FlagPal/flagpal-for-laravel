@@ -8,7 +8,7 @@ it('has feature sets as a relation', function () {
     $hydrator = app(ItemHydrator::class);
 
     /** @var Funnel $funnel */
-    $funnel = $hydrator->hydrate(new Funnel(), [
+    $funnel = $hydrator->hydrate(new Funnel, [
         Funnel::ACTIVE => true,
         Funnel::PERCENT => 100,
         Funnel::RULES => [],
@@ -25,7 +25,7 @@ it('has metrics as a relation', function () {
     $hydrator = app(ItemHydrator::class);
 
     /** @var Funnel $funnel */
-    $funnel = $hydrator->hydrate(new Funnel(), [
+    $funnel = $hydrator->hydrate(new Funnel, [
         Funnel::ACTIVE => true,
         Funnel::PERCENT => 100,
         Funnel::RULES => [],

@@ -1,18 +1,10 @@
 <?php
 
-use Illuminate\Support\Collection;
 use Laravel\Pennant\Contracts\FeatureScopeSerializeable;
-use Laravel\Pennant\Feature;
 use Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures;
 use Rapkis\FlagPal\FlagPal;
 use Rapkis\FlagPal\Pennant\FlagPalDriver;
-use Rapkis\FlagPal\Pennant\HasFlagPalReference;
 use Rapkis\FlagPal\Pennant\StatelessFeatures;
-use Rapkis\FlagPal\Resources\Actor;
-use Rapkis\FlagPal\Resources\FeatureSet;
-use Rapkis\FlagPal\Resources\Funnel;
-use Swis\JsonApi\Client\Document;
-use Swis\JsonApi\Client\ItemHydrator;
 
 it('returns entered funnels from FlagPal', function () {
     $flagPal = $this->createMock(FlagPal::class);
@@ -62,22 +54,28 @@ it('gets all features for multiple scopes', function () {
 
     $driver = new FlagPalDriver($flagPal);
 
-    $scope1 = new class implements FeatureScopeSerializeable {
-        public function __toString() {
+    $scope1 = new class implements FeatureScopeSerializeable
+    {
+        public function __toString()
+        {
             return 'scope1';
         }
 
-        public function featureScopeSerialize(): string {
+        public function featureScopeSerialize(): string
+        {
             return 'scope1';
         }
     };
 
-    $scope2 = new class implements FeatureScopeSerializeable {
-        public function __toString() {
+    $scope2 = new class implements FeatureScopeSerializeable
+    {
+        public function __toString()
+        {
             return 'scope2';
         }
 
-        public function featureScopeSerialize(): string {
+        public function featureScopeSerialize(): string
+        {
             return 'scope2';
         }
     };
@@ -131,16 +129,20 @@ it('gets feature value for scope implementing StoresFlagPalFeatures', function (
 
     $driver = new FlagPalDriver($flagPal);
 
-    $scope = new class implements StoresFlagPalFeatures, FeatureScopeSerializeable {
-        public function getFlagPalFeatures(): StatelessFeatures {
+    $scope = new class implements FeatureScopeSerializeable, StoresFlagPalFeatures
+    {
+        public function getFlagPalFeatures(): StatelessFeatures
+        {
             return new StatelessFeatures(['feature1' => 'stored']);
         }
 
-        public function saveFlagPalFeatures(array $features): \Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures {
+        public function saveFlagPalFeatures(array $features): \Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
+        {
             return $this;
         }
 
-        public function featureScopeSerialize(): string {
+        public function featureScopeSerialize(): string
+        {
             return 'stored-features-scope';
         }
     };
@@ -154,19 +156,24 @@ it('sets feature value for scope implementing StoresFlagPalFeatures', function (
     $flagPal = $this->createMock(FlagPal::class);
     $driver = new FlagPalDriver($flagPal);
 
-    $scope = new class implements StoresFlagPalFeatures, FeatureScopeSerializeable {
+    $scope = new class implements FeatureScopeSerializeable, StoresFlagPalFeatures
+    {
         public $savedFeatures = [];
 
-        public function getFlagPalFeatures(): StatelessFeatures {
+        public function getFlagPalFeatures(): StatelessFeatures
+        {
             return new StatelessFeatures([]);
         }
 
-        public function saveFlagPalFeatures(array $features): \Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures {
+        public function saveFlagPalFeatures(array $features): \Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
+        {
             $this->savedFeatures = $features;
+
             return $this;
         }
 
-        public function featureScopeSerialize(): string {
+        public function featureScopeSerialize(): string
+        {
             return 'save-features-scope';
         }
     };
@@ -188,20 +195,26 @@ it('deletes feature for scope implementing StoresFlagPalFeatures', function () {
     $flagPal = $this->createMock(FlagPal::class);
     $driver = new FlagPalDriver($flagPal);
 
-    $scope = new class implements StoresFlagPalFeatures, FeatureScopeSerializeable {
+    $scope = new class implements FeatureScopeSerializeable, StoresFlagPalFeatures
+    {
         public $savedFeatures = [];
+
         private $features = ['feature1' => 'value', 'feature2' => 'value2'];
 
-        public function getFlagPalFeatures(): StatelessFeatures {
+        public function getFlagPalFeatures(): StatelessFeatures
+        {
             return new StatelessFeatures($this->features);
         }
 
-        public function saveFlagPalFeatures(array $features): \Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures {
+        public function saveFlagPalFeatures(array $features): \Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
+        {
             $this->savedFeatures = $features;
+
             return $this;
         }
 
-        public function featureScopeSerialize(): string {
+        public function featureScopeSerialize(): string
+        {
             return 'delete-features-scope';
         }
     };

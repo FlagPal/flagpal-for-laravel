@@ -21,8 +21,7 @@ class RecordMetricForEnteredFunnelJob implements ShouldQueue
         public readonly string $metric,
         public readonly int $value,
         public readonly ?\DateTimeInterface $dateTime = null,
-    ) {
-    }
+    ) {}
 
     public function handle(FlagPal $flagPal): void
     {

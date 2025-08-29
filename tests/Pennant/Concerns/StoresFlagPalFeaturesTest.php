@@ -9,7 +9,7 @@ use Rapkis\FlagPal\Resources\Actor;
 it('gets features from FlagPal actor', function () {
     $flagPal = $this->createMock(FlagPal::class);
 
-    $actor = new Actor();
+    $actor = new Actor;
     $actor->features = ['feature1' => 'value1', 'feature2' => 'value2'];
 
     $flagPal->expects($this->once())
@@ -17,14 +17,17 @@ it('gets features from FlagPal actor', function () {
         ->with('test-reference')
         ->willReturn($actor);
 
-    $model = new class($flagPal) implements StoresFlagPalFeaturesContract {
+    $model = new class($flagPal) implements StoresFlagPalFeaturesContract
+    {
         use StoresFlagPalFeatures;
 
-        public function __construct(FlagPal $flagPal) {
+        public function __construct(FlagPal $flagPal)
+        {
             $this->flagPal = $flagPal;
         }
 
-        public function getFlagPalReference(): string {
+        public function getFlagPalReference(): string
+        {
             return 'test-reference';
         }
     };
@@ -42,14 +45,17 @@ it('saves features to FlagPal actor', function () {
         ->method('saveActorFeatures')
         ->with('test-reference', ['feature1' => 'new-value', 'feature2' => 'value2']);
 
-    $model = new class($flagPal) implements StoresFlagPalFeaturesContract {
+    $model = new class($flagPal) implements StoresFlagPalFeaturesContract
+    {
         use StoresFlagPalFeatures;
 
-        public function __construct(FlagPal $flagPal) {
+        public function __construct(FlagPal $flagPal)
+        {
             $this->flagPal = $flagPal;
         }
 
-        public function getFlagPalReference(): string {
+        public function getFlagPalReference(): string
+        {
             return 'test-reference';
         }
     };
@@ -67,14 +73,17 @@ it('handles null actor response', function () {
         ->with('test-reference')
         ->willReturn(null);
 
-    $model = new class($flagPal) implements StoresFlagPalFeaturesContract {
+    $model = new class($flagPal) implements StoresFlagPalFeaturesContract
+    {
         use StoresFlagPalFeatures;
 
-        public function __construct(FlagPal $flagPal) {
+        public function __construct(FlagPal $flagPal)
+        {
             $this->flagPal = $flagPal;
         }
 
-        public function getFlagPalReference(): string {
+        public function getFlagPalReference(): string
+        {
             return 'test-reference';
         }
     };

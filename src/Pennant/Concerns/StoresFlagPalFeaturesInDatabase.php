@@ -32,7 +32,7 @@ trait StoresFlagPalFeaturesInDatabase
         $toDeactivate = collect($toDeactivate)->merge(collect($features)->filter(fn ($value, $name) => $value === null))->toArray();
         $toActivate = array_filter(array_diff($features, $currentFeatures));
 
-        if (!empty($toDeactivate)) {
+        if (! empty($toDeactivate)) {
             $this->newFeatureQuery()
                 ->where('scope', Feature::serializeScope($this))
                 ->whereIn('name', array_keys($toDeactivate))
@@ -58,7 +58,7 @@ trait StoresFlagPalFeaturesInDatabase
 
     protected function newFeatureQuery(): Builder
     {
-        return DB::connection(config("pennant.stores.database.connection"))
-            ->table(config("pennant.stores.database.table") ?? 'features');
+        return DB::connection(config('pennant.stores.database.connection'))
+            ->table(config('pennant.stores.database.table') ?? 'features');
     }
 }

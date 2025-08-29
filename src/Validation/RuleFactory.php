@@ -14,6 +14,6 @@ class RuleFactory
             throw new \InvalidArgumentException("Rule \"{$name}\" does not exist");
         }
 
-        return new $className();
+        return new $className;
     }
 }

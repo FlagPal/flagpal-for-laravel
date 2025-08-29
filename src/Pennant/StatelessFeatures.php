@@ -10,8 +10,8 @@ class StatelessFeatures implements FeatureScopeSerializeable
 {
     public function __construct(
         public readonly array $features,
-    ) {
-    }
+    ) {}
+
     public function featureScopeSerialize(): string
     {
         return json_encode($this->features);

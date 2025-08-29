@@ -2,8 +2,6 @@
 
 namespace Rapkis\FlagPal\Pennant\Concerns;
 
-use Laravel\Pennant\Concerns\HasFeatures;
-use Laravel\Pennant\Feature;
 use Rapkis\FlagPal\FlagPal;
 use Rapkis\FlagPal\Pennant\HasFlagPalReference;
 use Rapkis\FlagPal\Pennant\StatelessFeatures;

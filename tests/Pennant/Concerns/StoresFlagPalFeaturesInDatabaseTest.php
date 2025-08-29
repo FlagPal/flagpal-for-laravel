@@ -35,10 +35,12 @@ it('gets features from database', function () {
         ->with('features')
         ->andReturn($builder);
 
-    $model = new class implements StoresFlagPalFeaturesContract {
+    $model = new class implements StoresFlagPalFeaturesContract
+    {
         use StoresFlagPalFeaturesInDatabase;
 
-        public function __toString() {
+        public function __toString()
+        {
             return 'test-model';
         }
     };
@@ -84,10 +86,12 @@ it('caches features after first retrieval', function () {
         ->with('features')
         ->andReturn($builder);
 
-    $model = new class implements StoresFlagPalFeaturesContract {
+    $model = new class implements StoresFlagPalFeaturesContract
+    {
         use StoresFlagPalFeaturesInDatabase;
 
-        public function __toString() {
+        public function __toString()
+        {
             return 'test-model';
         }
     };
@@ -154,10 +158,12 @@ it('saves features to database', function () {
         ->with('features')
         ->andReturn($builder);
 
-    $model = new class implements StoresFlagPalFeaturesContract {
+    $model = new class implements StoresFlagPalFeaturesContract
+    {
         use StoresFlagPalFeaturesInDatabase;
 
-        public function __toString() {
+        public function __toString()
+        {
             return 'test-model';
         }
     };

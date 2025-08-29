@@ -12,7 +12,7 @@ it('resolves a feature set from funnel', function (?array $rules) {
     $hydrator = app(ItemHydrator::class);
 
     /** @var Funnel $funnel */
-    $funnel = $hydrator->hydrate(new Funnel(), [
+    $funnel = $hydrator->hydrate(new Funnel, [
         Funnel::ACTIVE => true,
         Funnel::PERCENT => 100,
         Funnel::RULES => $rules,
@@ -43,11 +43,11 @@ it('resolves a feature set from funnel', function (?array $rules) {
         ->and($set->getId())->toBe('9999');
 })->with([
     [[]],
-    [null]
+    [null],
 ]);
 
 it('skips funnel if disabled', function () {
-    $funnel = new Funnel();
+    $funnel = new Funnel;
     $funnel2 = new Funnel([Funnel::ACTIVE => false]);
 
     $resolver = app(ResolveFeaturesFromFunnel::class);
@@ -77,7 +77,7 @@ it('skips funnel if validation fails', function () {
     $validator = $this->createStub(Validator::class);
     $validator->method('passes')->willReturn(false);
 
-    $resolver = new ResolveFeaturesFromFunnel($validator, new Raffle());
+    $resolver = new ResolveFeaturesFromFunnel($validator, new Raffle);
 
     expect($resolver($funnel, []))->toBeNull();
 });

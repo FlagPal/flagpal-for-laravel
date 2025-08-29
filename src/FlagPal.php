@@ -106,7 +106,7 @@ class FlagPal
 
     public function recordMetric(Metric $metric, FeatureSet $set, int $value, ?DateTimeInterface $dateTime = null): bool
     {
-        $item = $this->itemHydrator->hydrate(new MetricTimeSeries(), [
+        $item = $this->itemHydrator->hydrate(new MetricTimeSeries, [
             MetricTimeSeries::METRIC => $metric->toJsonApiArray(),
             MetricTimeSeries::FEATURE_SET => $set->toJsonApiArray(),
             MetricTimeSeries::VALUE => $value,
@@ -135,7 +135,7 @@ class FlagPal
     public function saveActorFeatures(string $reference, array $features): Actor
     {
         /** @var Actor $actor */
-        $actor = $this->itemHydrator->hydrate(new Actor(), [
+        $actor = $this->itemHydrator->hydrate(new Actor, [
             Actor::FEATURES => $features,
         ]);
         $actor->setId($reference);
@@ -169,7 +169,7 @@ class FlagPal
         if ($document instanceof InvalidResponseDocument || $document->hasErrors()) {
             $this->log()?->error('FlagPal failed to load funnels', ['document' => $document->toArray()]);
 
-            return new Collection();
+            return new Collection;
         }
 
         $funnels = Collection::make($document->getData());
