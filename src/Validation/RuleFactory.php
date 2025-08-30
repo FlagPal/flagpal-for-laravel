@@ -2,8 +2,8 @@
 
 namespace FlagPal\FlagPal\Validation;
 
-use Illuminate\Support\Str;
 use FlagPal\FlagPal\Contracts\Rules\Rule;
+use Illuminate\Support\Str;
 
 class RuleFactory
 {

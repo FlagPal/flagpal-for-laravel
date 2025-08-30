@@ -1,10 +1,5 @@
 <?php
 
-use Illuminate\Cache\CacheManager;
-use Illuminate\Log\LogManager;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
-use Psr\Log\LoggerInterface;
 use FlagPal\FlagPal\Actions\ResolveFeaturesFromFunnel;
 use FlagPal\FlagPal\EnteredFunnel;
 use FlagPal\FlagPal\FlagPal;
@@ -17,6 +12,11 @@ use FlagPal\FlagPal\Resources\FeatureSet;
 use FlagPal\FlagPal\Resources\Funnel;
 use FlagPal\FlagPal\Resources\Metric;
 use FlagPal\FlagPal\Resources\MetricTimeSeries;
+use Illuminate\Cache\CacheManager;
+use Illuminate\Log\LogManager;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Psr\Log\LoggerInterface;
 use Swis\JsonApi\Client\Collection;
 use Swis\JsonApi\Client\Document;
 use Swis\JsonApi\Client\ErrorCollection;

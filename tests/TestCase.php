@@ -2,9 +2,9 @@
 
 namespace FlagPal\FlagPal\Tests;
 
+use FlagPal\FlagPal\FlagPalServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use FlagPal\FlagPal\FlagPalServiceProvider;
 
 class TestCase extends Orchestra
 {

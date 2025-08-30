@@ -2,8 +2,8 @@
 
 namespace FlagPal\FlagPal\Resources;
 
-use Illuminate\Support\Carbon;
 use FlagPal\FlagPal\Contracts\Resources\Resource;
+use Illuminate\Support\Carbon;
 use Swis\JsonApi\Client\Item;
 
 /**

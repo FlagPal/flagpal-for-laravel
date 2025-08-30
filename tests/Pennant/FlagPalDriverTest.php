@@ -1,10 +1,10 @@
 <?php
 
-use Laravel\Pennant\Contracts\FeatureScopeSerializeable;
 use FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures;
 use FlagPal\FlagPal\FlagPal;
 use FlagPal\FlagPal\Pennant\FlagPalDriver;
 use FlagPal\FlagPal\Pennant\StatelessFeatures;
+use Laravel\Pennant\Contracts\FeatureScopeSerializeable;
 
 it('returns entered funnels from FlagPal', function () {
     $flagPal = $this->createMock(FlagPal::class);

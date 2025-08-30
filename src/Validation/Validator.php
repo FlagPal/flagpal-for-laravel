@@ -2,9 +2,9 @@
 
 namespace FlagPal\FlagPal\Validation;
 
+use FlagPal\FlagPal\Contracts\Rules\Rule;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Factory;
-use FlagPal\FlagPal\Contracts\Rules\Rule;
 
 class Validator
 {

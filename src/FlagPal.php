@@ -4,11 +4,6 @@ namespace FlagPal\FlagPal;
 
 use Carbon\CarbonInterval;
 use DateTimeInterface;
-use Illuminate\Cache\CacheManager;
-use Illuminate\Log\LogManager;
-use Illuminate\Support\Collection;
-use Psr\Log\LoggerInterface;
-use Psr\SimpleCache\CacheInterface;
 use FlagPal\FlagPal\Actions\ResolveFeaturesFromFunnel;
 use FlagPal\FlagPal\Repositories\ActorRepository;
 use FlagPal\FlagPal\Repositories\FeatureRepository;
@@ -19,6 +14,11 @@ use FlagPal\FlagPal\Resources\FeatureSet;
 use FlagPal\FlagPal\Resources\Funnel;
 use FlagPal\FlagPal\Resources\Metric;
 use FlagPal\FlagPal\Resources\MetricTimeSeries;
+use Illuminate\Cache\CacheManager;
+use Illuminate\Log\LogManager;
+use Illuminate\Support\Collection;
+use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
 use Swis\JsonApi\Client\InvalidResponseDocument;
 use Swis\JsonApi\Client\ItemHydrator;
 

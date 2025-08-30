@@ -2,11 +2,11 @@
 
 namespace FlagPal\FlagPal\Pennant\Concerns;
 
+use FlagPal\FlagPal\Pennant\StatelessFeatures;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Laravel\Pennant\Drivers\DatabaseDriver;
 use Laravel\Pennant\Feature;
-use FlagPal\FlagPal\Pennant\StatelessFeatures;
 
 trait StoresFlagPalFeaturesInDatabase
 {

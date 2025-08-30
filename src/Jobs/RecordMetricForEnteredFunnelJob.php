@@ -2,13 +2,13 @@
 
 namespace FlagPal\FlagPal\Jobs;
 
+use FlagPal\FlagPal\EnteredFunnel;
+use FlagPal\FlagPal\FlagPal;
+use FlagPal\FlagPal\Resources\Metric;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use FlagPal\FlagPal\EnteredFunnel;
-use FlagPal\FlagPal\FlagPal;
-use FlagPal\FlagPal\Resources\Metric;
 
 class RecordMetricForEnteredFunnelJob implements ShouldQueue
 {

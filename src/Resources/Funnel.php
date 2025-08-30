@@ -2,9 +2,9 @@
 
 namespace FlagPal\FlagPal\Resources;
 
-use Illuminate\Support\Carbon;
 use FlagPal\FlagPal\Contracts\Resources\Resource;
 use FlagPal\FlagPal\Enums\FunnelKind;
+use Illuminate\Support\Carbon;
 use Swis\JsonApi\Client\Collection;
 use Swis\JsonApi\Client\Interfaces\ManyRelationInterface;
 use Swis\JsonApi\Client\Item;
