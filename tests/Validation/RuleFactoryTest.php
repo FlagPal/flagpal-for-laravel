@@ -1,7 +1,7 @@
 <?php
 
-use Rapkis\FlagPal\Validation\RuleFactory;
-use Rapkis\FlagPal\Validation\Rules\DateBeforeOrEqualRule;
+use FlagPal\FlagPal\Validation\RuleFactory;
+use FlagPal\FlagPal\Validation\Rules\DateBeforeOrEqualRule;
 
 it('can make a rule', function () {
     $factory = new RuleFactory;

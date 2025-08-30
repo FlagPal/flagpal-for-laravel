@@ -1,6 +1,6 @@
 <?php
 
-namespace Rapkis\FlagPal\Repositories;
+namespace FlagPal\FlagPal\Repositories;
 
 use Swis\JsonApi\Client\Actions\FetchMany;
 use Swis\JsonApi\Client\BaseRepository;

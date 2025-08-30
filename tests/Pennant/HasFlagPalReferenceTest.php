@@ -1,8 +1,8 @@
 <?php
 
+use FlagPal\FlagPal\Pennant\HasFlagPalReference;
 use Laravel\Pennant\Contracts\FeatureScopeSerializeable;
 use Laravel\Pennant\Feature;
-use Rapkis\FlagPal\Pennant\HasFlagPalReference;
 
 it('returns serialized scope as reference', function () {
     $model = new class implements FeatureScopeSerializeable

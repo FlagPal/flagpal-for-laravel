@@ -1,24 +1,24 @@
 <?php
 
-namespace Rapkis\FlagPal;
+namespace FlagPal\FlagPal;
 
 use Carbon\CarbonInterval;
 use DateTimeInterface;
+use FlagPal\FlagPal\Actions\ResolveFeaturesFromFunnel;
+use FlagPal\FlagPal\Repositories\ActorRepository;
+use FlagPal\FlagPal\Repositories\FeatureRepository;
+use FlagPal\FlagPal\Repositories\FunnelRepository;
+use FlagPal\FlagPal\Repositories\MetricTimeSeriesRepository;
+use FlagPal\FlagPal\Resources\Actor;
+use FlagPal\FlagPal\Resources\FeatureSet;
+use FlagPal\FlagPal\Resources\Funnel;
+use FlagPal\FlagPal\Resources\Metric;
+use FlagPal\FlagPal\Resources\MetricTimeSeries;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Log\LogManager;
 use Illuminate\Support\Collection;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
-use Rapkis\FlagPal\Actions\ResolveFeaturesFromFunnel;
-use Rapkis\FlagPal\Repositories\ActorRepository;
-use Rapkis\FlagPal\Repositories\FeatureRepository;
-use Rapkis\FlagPal\Repositories\FunnelRepository;
-use Rapkis\FlagPal\Repositories\MetricTimeSeriesRepository;
-use Rapkis\FlagPal\Resources\Actor;
-use Rapkis\FlagPal\Resources\FeatureSet;
-use Rapkis\FlagPal\Resources\Funnel;
-use Rapkis\FlagPal\Resources\Metric;
-use Rapkis\FlagPal\Resources\MetricTimeSeries;
 use Swis\JsonApi\Client\InvalidResponseDocument;
 use Swis\JsonApi\Client\ItemHydrator;
 

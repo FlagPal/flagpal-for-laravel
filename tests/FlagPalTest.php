@@ -1,22 +1,22 @@
 <?php
 
+use FlagPal\FlagPal\Actions\ResolveFeaturesFromFunnel;
+use FlagPal\FlagPal\EnteredFunnel;
+use FlagPal\FlagPal\FlagPal;
+use FlagPal\FlagPal\Repositories\ActorRepository;
+use FlagPal\FlagPal\Repositories\FeatureRepository;
+use FlagPal\FlagPal\Repositories\FunnelRepository;
+use FlagPal\FlagPal\Repositories\MetricTimeSeriesRepository;
+use FlagPal\FlagPal\Resources\Actor;
+use FlagPal\FlagPal\Resources\FeatureSet;
+use FlagPal\FlagPal\Resources\Funnel;
+use FlagPal\FlagPal\Resources\Metric;
+use FlagPal\FlagPal\Resources\MetricTimeSeries;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Log\LogManager;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Psr\Log\LoggerInterface;
-use Rapkis\FlagPal\Actions\ResolveFeaturesFromFunnel;
-use Rapkis\FlagPal\EnteredFunnel;
-use Rapkis\FlagPal\FlagPal;
-use Rapkis\FlagPal\Repositories\ActorRepository;
-use Rapkis\FlagPal\Repositories\FeatureRepository;
-use Rapkis\FlagPal\Repositories\FunnelRepository;
-use Rapkis\FlagPal\Repositories\MetricTimeSeriesRepository;
-use Rapkis\FlagPal\Resources\Actor;
-use Rapkis\FlagPal\Resources\FeatureSet;
-use Rapkis\FlagPal\Resources\Funnel;
-use Rapkis\FlagPal\Resources\Metric;
-use Rapkis\FlagPal\Resources\MetricTimeSeries;
 use Swis\JsonApi\Client\Collection;
 use Swis\JsonApi\Client\Document;
 use Swis\JsonApi\Client\ErrorCollection;

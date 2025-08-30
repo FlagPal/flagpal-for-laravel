@@ -1,13 +1,13 @@
 <?php
 
-namespace Rapkis\FlagPal\Pennant;
+namespace FlagPal\FlagPal\Pennant;
 
 use Exception;
+use FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures;
+use FlagPal\FlagPal\FlagPal;
 use Illuminate\Support\Collection;
 use Laravel\Pennant\Contracts\DefinesFeaturesExternally;
 use Laravel\Pennant\Contracts\Driver;
-use Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures;
-use Rapkis\FlagPal\FlagPal;
 
 // todo features are cached in Pennant by serialized scope. We need to clear it every time before resolving features (maybe?)
 class FlagPalDriver implements DefinesFeaturesExternally, Driver

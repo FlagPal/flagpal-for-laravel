@@ -1,8 +1,8 @@
 <?php
 
-namespace Rapkis\FlagPal\Contracts\Pennant;
+namespace FlagPal\FlagPal\Contracts\Pennant;
 
-use Rapkis\FlagPal\Pennant\StatelessFeatures;
+use FlagPal\FlagPal\Pennant\StatelessFeatures;
 
 interface StoresFlagPalFeatures
 {

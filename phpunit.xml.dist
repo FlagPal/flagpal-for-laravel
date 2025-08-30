@@ -16,7 +16,7 @@
     backupStaticProperties="false"
 >
     <testsuites>
-        <testsuite name="Rapkis Test Suite">
+        <testsuite name="FlagPal Test Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
@@ -29,6 +29,7 @@
     </coverage>
     <php>
         <env name="FLAGPAL_PROJECT" value="My Project"/>
+        <env name="CACHE_STORE" value="array"/>
     </php>
     <logging>
         <junit outputFile="build/report.junit.xml"/>

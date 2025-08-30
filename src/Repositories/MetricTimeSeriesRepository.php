@@ -1,6 +1,6 @@
 <?php
 
-namespace Rapkis\FlagPal\Repositories;
+namespace FlagPal\FlagPal\Repositories;
 
 use Swis\JsonApi\Client\Actions\Create;
 use Swis\JsonApi\Client\BaseRepository;

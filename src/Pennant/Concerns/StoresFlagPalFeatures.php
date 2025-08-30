@@ -1,10 +1,10 @@
 <?php
 
-namespace Rapkis\FlagPal\Pennant\Concerns;
+namespace FlagPal\FlagPal\Pennant\Concerns;
 
-use Rapkis\FlagPal\FlagPal;
-use Rapkis\FlagPal\Pennant\HasFlagPalReference;
-use Rapkis\FlagPal\Pennant\StatelessFeatures;
+use FlagPal\FlagPal\FlagPal;
+use FlagPal\FlagPal\Pennant\HasFlagPalReference;
+use FlagPal\FlagPal\Pennant\StatelessFeatures;
 
 trait StoresFlagPalFeatures
 {

@@ -1,10 +1,10 @@
 <?php
 
-use Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures as StoresFlagPalFeaturesContract;
-use Rapkis\FlagPal\FlagPal;
-use Rapkis\FlagPal\Pennant\Concerns\StoresFlagPalFeatures;
-use Rapkis\FlagPal\Pennant\StatelessFeatures;
-use Rapkis\FlagPal\Resources\Actor;
+use FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures as StoresFlagPalFeaturesContract;
+use FlagPal\FlagPal\FlagPal;
+use FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeatures;
+use FlagPal\FlagPal\Pennant\StatelessFeatures;
+use FlagPal\FlagPal\Resources\Actor;
 
 it('gets features from FlagPal actor', function () {
     $flagPal = $this->createMock(FlagPal::class);

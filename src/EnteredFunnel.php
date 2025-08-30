@@ -1,9 +1,9 @@
 <?php
 
-namespace Rapkis\FlagPal;
+namespace FlagPal\FlagPal;
 
-use Rapkis\FlagPal\Resources\FeatureSet;
-use Rapkis\FlagPal\Resources\Funnel;
+use FlagPal\FlagPal\Resources\FeatureSet;
+use FlagPal\FlagPal\Resources\Funnel;
 
 class EnteredFunnel
 {

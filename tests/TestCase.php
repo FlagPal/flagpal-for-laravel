@@ -1,10 +1,10 @@
 <?php
 
-namespace Rapkis\FlagPal\Tests;
+namespace FlagPal\FlagPal\Tests;
 
+use FlagPal\FlagPal\FlagPalServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Rapkis\FlagPal\FlagPalServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -13,7 +13,7 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'Rapkis\\FlagPal\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'FlagPal\\FlagPal\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
     }
 

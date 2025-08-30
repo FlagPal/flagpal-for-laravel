@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Rapkis\FlagPal\Validation\Rules;
+namespace FlagPal\FlagPal\Validation\Rules;
 
 class BooleanRule extends AbstractRule
 {

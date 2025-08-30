@@ -1,16 +1,16 @@
 <?php
 
-namespace Rapkis\FlagPal;
+namespace FlagPal\FlagPal;
 
+use FlagPal\FlagPal\Contracts\Resources\Resource;
+use FlagPal\FlagPal\Pennant\FlagPalDriver;
+use FlagPal\FlagPal\Resources\Actor;
+use FlagPal\FlagPal\Resources\Feature;
+use FlagPal\FlagPal\Resources\FeatureSet;
+use FlagPal\FlagPal\Resources\Funnel;
+use FlagPal\FlagPal\Resources\Metric;
+use FlagPal\FlagPal\Resources\MetricTimeSeries;
 use Illuminate\Contracts\Foundation\Application;
-use Rapkis\FlagPal\Contracts\Resources\Resource;
-use Rapkis\FlagPal\Pennant\FlagPalDriver;
-use Rapkis\FlagPal\Resources\Actor;
-use Rapkis\FlagPal\Resources\Feature;
-use Rapkis\FlagPal\Resources\FeatureSet;
-use Rapkis\FlagPal\Resources\Funnel;
-use Rapkis\FlagPal\Resources\Metric;
-use Rapkis\FlagPal\Resources\MetricTimeSeries;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Swis\JsonApi\Client\Client;

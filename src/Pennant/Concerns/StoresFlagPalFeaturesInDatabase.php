@@ -1,12 +1,12 @@
 <?php
 
-namespace Rapkis\FlagPal\Pennant\Concerns;
+namespace FlagPal\FlagPal\Pennant\Concerns;
 
+use FlagPal\FlagPal\Pennant\StatelessFeatures;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Laravel\Pennant\Drivers\DatabaseDriver;
 use Laravel\Pennant\Feature;
-use Rapkis\FlagPal\Pennant\StatelessFeatures;
 
 trait StoresFlagPalFeaturesInDatabase
 {
