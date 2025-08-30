@@ -1,9 +1,9 @@
 # FlagPal for Laravel
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/rapkis/flagpal-for-laravel.svg?style=flat-square)](https://packagist.org/packages/rapkis/flagpal-for-laravel)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/rapkis/flagpal-for-laravel/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/rapkis/flagpal-for-laravel/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/rapkis/flagpal-for-laravel/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/rapkis/flagpal-for-laravel/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/rapkis/flagpal-for-laravel.svg?style=flat-square)](https://packagist.org/packages/rapkis/flagpal-for-laravel)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/flagpal/flagpal-for-laravel.svg?style=flat-square)](https://packagist.org/packages/flagpal/flagpal-for-laravel)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/flagpal/flagpal-for-laravel/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/flagpal/flagpal-for-laravel/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/flagpal/flagpal-for-laravel/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/flagpal/flagpal-for-laravel/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
+[![Total Downloads](https://img.shields.io/packagist/dt/flagpal/flagpal-for-laravel.svg?style=flat-square)](https://packagist.org/packages/flagpal/flagpal-for-laravel)
 
 FlagPal is a Laravel package for resolving feature flags provided via flagpal.com API. It allows you to incrementally roll out new features, perform A/B testing, and manage feature access across your application with ease.
 
@@ -21,7 +21,7 @@ FlagPal is a Laravel package for resolving feature flags provided via flagpal.co
 You can install the package via composer:
 
 ```bash
-composer require rapkis/flagpal-for-laravel
+composer require flagpal/flagpal-for-laravel
 ```
 
 You can publish the config file with:
@@ -109,7 +109,7 @@ if (Feature::active('new-api')) {
 
 #### Without Pennant
 ```php
-use Rapkis\FlagPal\FlagPal;
+use FlagPal\FlagPal\FlagPal;
 
 // Create a FlagPal instance or use dependency injection
 $flagPal = app(FlagPal::class);
@@ -145,7 +145,7 @@ if (Feature::value('checkout-flow') === 'multi-step') {
 
 #### Without Pennant
 ```php
-use Rapkis\FlagPal\FlagPal;
+use FlagPal\FlagPal\FlagPal;
 
 // Create a FlagPal instance or use dependency injection
 $flagPal = app(FlagPal::class);
@@ -178,7 +178,7 @@ $currentFeatures = [
     'trial-days-remaining' => 14,
 ];
 
-$currentFeatures = new \Rapkis\FlagPal\Pennant\StatelessFeatures($currentFeatures);
+$currentFeatures = new \FlagPal\FlagPal\Pennant\StatelessFeatures($currentFeatures);
 
 // Check if a specific feature is active
 if (Feature::for($currentFeatures)->active('show-trial-reminder')) {
@@ -189,7 +189,7 @@ if (Feature::for($currentFeatures)->active('show-trial-reminder')) {
 #### Without Pennant
 
 ```php
-use Rapkis\FlagPal\FlagPal;
+use FlagPal\FlagPal\FlagPal;
 
 // Create a FlagPal instance or use dependency injection
 $flagPal = app(FlagPal::class);
@@ -260,7 +260,7 @@ Feature::driver('flagpal_project_b')->all();
 #### Without Pennant
 
 ```php
-use Rapkis\FlagPal\FlagPal;
+use FlagPal\FlagPal\FlagPal;
 
 // Create a FlagPal instance or use dependency injection
 $flagPal = app(FlagPal::class);
@@ -273,9 +273,9 @@ $features = $flagPal->asProject('project_b')->resolveFeatures();
 ### Recording Metrics
 
 ```php
-use Rapkis\FlagPal\FlagPal;
-use Rapkis\FlagPal\Resources\Metric;
-use Rapkis\FlagPal\Resources\FeatureSet;
+use FlagPal\FlagPal\FlagPal;
+use FlagPal\FlagPal\Resources\Metric;
+use FlagPal\FlagPal\Resources\FeatureSet;
 
 // Create a metric and feature set
 $metric = new Metric(['name' => 'conversion']);
@@ -291,7 +291,7 @@ FlagPal can be used as a stateless feature resolver but also works as a data war
 You can store and retrieve data for "Actors", which is an abstract name for your any entity in your application: a user, a team, a project, etc. 
 
 ```php
-use Rapkis\FlagPal\FlagPal;
+use FlagPal\FlagPal\FlagPal;
 
 // Create a FlagPal instance or use dependency injection
 $flagPal = app(FlagPal::class);
@@ -310,7 +310,7 @@ After every feature resolution, each funnel is stored in-memory for easy access.
 You can store this for analytics, debugging, and so on.
 
 ```php
-use Rapkis\FlagPal\FlagPal;
+use FlagPal\FlagPal\FlagPal;
 
 // Create a FlagPal instance or use dependency injection
 $flagPal = app(FlagPal::class);
@@ -394,7 +394,7 @@ Using FlagPal in a stateless way is probably simplest to understand because it d
 This approach is most commonly used if you're using FlagPal as a remote configurator. For example, imagine you need to use different payment gateways, depending on your current APP's locale to provide the best customer experience:
 ```php
 // Create your stateless features (your app's, or subsystem's configuration)
-$features = new \Rapkis\FlagPal\Pennant\StatelessFeatures(['locale' => \Illuminate\Support\Facades\App::getLocale()]);
+$features = new \FlagPal\FlagPal\Pennant\StatelessFeatures(['locale' => \Illuminate\Support\Facades\App::getLocale()]);
 
 \Laravel\Pennant\Feature::driver('flagpal_payments_project')->for($features)->value('payment-gateway'); // could be 'stripe' for US, or 'boleto' for Brazil. All configured in FlagPal
 ```
@@ -407,14 +407,14 @@ Storing feature flags locally provides you with a few additional benefits:
 - You save a round trip to the FlagPal's API. This increases your application's performance, since you only need to query your database, which is usually quicker.
 - You may want to manipulate your data more directly (like performing custom analytical queries, or mass updating some values).
 
-To use this approach, your model only needs to implement the `Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures` interface.
-There's a trait that should cover most of the common use cases for storing feature flags, if you're using Pennant: `Rapkis\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase`
+To use this approach, your model only needs to implement the `FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures` interface.
+There's a trait that should cover most of the common use cases for storing feature flags, if you're using Pennant: `FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase`
 
 ```php
 class User extends Model
 {
     use Laravel\Pennant\Concerns\HasFeatures;
-    use Rapkis\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase;
+    use FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase;
 }
 
 // Usage
@@ -427,7 +427,7 @@ $user->features()->all(); // ['some-feature' => 'you-have-by-default', 'some-oth
 ```
 
 #### Using FlagPal as a remote data warehouse
-In this scenario, you can avoid storing any data on your own, and trust FlagPal to do it for you. In this case, you can instead use the trait `Rapkis\FlagPal\Pennant\Concerns\StoresFlagPalFeatures`.
+In this scenario, you can avoid storing any data on your own, and trust FlagPal to do it for you. In this case, you can instead use the trait `FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeatures`.
 It calls the FlagPal API to save and retrieve features for your scope. Each scope must send a reference/identifier for itself, so that you can track which features belong to which scopes. 
 By default, the reference is generated through Pennant: `Feature::serializeScope($this)`. However, you can customize your reference by re-defining the method `getFlagPalReference()`. 
 This reference must uniquely identify your scope (User, Team, etc.) and will be used to automatically store and retrieve the features in FlagPal via the API:
@@ -436,7 +436,7 @@ This reference must uniquely identify your scope (User, Team, etc.) and will be 
 class User extends Model
 {
     use Laravel\Pennant\Concerns\HasFeatures;
-    use Rapkis\FlagPal\Pennant\Concerns\StoresFlagPalFeatures;
+    use FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeatures;
     
     // Implementing the method manually
     public function getFlagPalReference(): string 

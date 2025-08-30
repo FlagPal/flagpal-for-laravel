@@ -1,6 +1,6 @@
 <?php
 
-use Rapkis\FlagPal\Validation\Validator;
+use FlagPal\FlagPal\Validation\Validator;
 
 it('validates features by rules', function (array $features, array $rules, bool $expected) {
     /** @var Validator $validator */

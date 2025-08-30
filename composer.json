@@ -1,5 +1,5 @@
 {
-    "name": "rapkis/flagpal-for-laravel",
+    "name": "flagpal/flagpal-for-laravel",
     "description": "An SDK for using the FlagPal in Laravel",
     "keywords": [
         "Rapolas Gruzdys",
@@ -43,13 +43,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Rapkis\\FlagPal\\": "src/",
-            "Rapkis\\FlagPal\\Database\\Factories\\": "database/factories/"
+            "FlagPal\\FlagPal\\": "src/",
+            "FlagPal\\FlagPal\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Rapkis\\FlagPal\\Tests\\": "tests/",
+            "FlagPal\\FlagPal\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
@@ -82,10 +82,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Rapkis\\FlagPal\\FlagPalServiceProvider"
+                "FlagPal\\FlagPal\\FlagPalServiceProvider"
             ],
             "aliases": {
-                "FlagPal": "Rapkis\\FlagPal\\Facades\\FlagPal"
+                "FlagPal": "FlagPal\\FlagPal\\Facades\\FlagPal"
             }
         }
     },

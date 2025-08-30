@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   php:
     image: lorisleiva/laravel-docker:8.2

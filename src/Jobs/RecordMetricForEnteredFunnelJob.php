@@ -1,14 +1,14 @@
 <?php
 
-namespace Rapkis\FlagPal\Jobs;
+namespace FlagPal\FlagPal\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Rapkis\FlagPal\EnteredFunnel;
-use Rapkis\FlagPal\FlagPal;
-use Rapkis\FlagPal\Resources\Metric;
+use FlagPal\FlagPal\EnteredFunnel;
+use FlagPal\FlagPal\FlagPal;
+use FlagPal\FlagPal\Resources\Metric;
 
 class RecordMetricForEnteredFunnelJob implements ShouldQueue
 {

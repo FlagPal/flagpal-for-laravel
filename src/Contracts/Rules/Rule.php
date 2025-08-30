@@ -1,6 +1,6 @@
 <?php
 
-namespace Rapkis\FlagPal\Contracts\Rules;
+namespace FlagPal\FlagPal\Contracts\Rules;
 
 interface Rule
 {

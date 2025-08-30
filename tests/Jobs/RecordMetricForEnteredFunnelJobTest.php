@@ -1,11 +1,11 @@
 <?php
 
-use Rapkis\FlagPal\EnteredFunnel;
-use Rapkis\FlagPal\FlagPal;
-use Rapkis\FlagPal\Jobs\RecordMetricForEnteredFunnelJob;
-use Rapkis\FlagPal\Resources\FeatureSet;
-use Rapkis\FlagPal\Resources\Funnel;
-use Rapkis\FlagPal\Resources\Metric;
+use FlagPal\FlagPal\EnteredFunnel;
+use FlagPal\FlagPal\FlagPal;
+use FlagPal\FlagPal\Jobs\RecordMetricForEnteredFunnelJob;
+use FlagPal\FlagPal\Resources\FeatureSet;
+use FlagPal\FlagPal\Resources\Funnel;
+use FlagPal\FlagPal\Resources\Metric;
 use Swis\JsonApi\Client\ItemHydrator;
 
 it('records the metric for an entered funnel', function () {

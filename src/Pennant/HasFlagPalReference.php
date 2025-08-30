@@ -1,6 +1,6 @@
 <?php
 
-namespace Rapkis\FlagPal\Pennant;
+namespace FlagPal\FlagPal\Pennant;
 
 use Laravel\Pennant\Feature;
 

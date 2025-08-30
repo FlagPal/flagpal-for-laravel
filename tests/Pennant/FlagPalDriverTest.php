@@ -1,10 +1,10 @@
 <?php
 
 use Laravel\Pennant\Contracts\FeatureScopeSerializeable;
-use Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures;
-use Rapkis\FlagPal\FlagPal;
-use Rapkis\FlagPal\Pennant\FlagPalDriver;
-use Rapkis\FlagPal\Pennant\StatelessFeatures;
+use FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures;
+use FlagPal\FlagPal\FlagPal;
+use FlagPal\FlagPal\Pennant\FlagPalDriver;
+use FlagPal\FlagPal\Pennant\StatelessFeatures;
 
 it('returns entered funnels from FlagPal', function () {
     $flagPal = $this->createMock(FlagPal::class);
@@ -136,7 +136,7 @@ it('gets feature value for scope implementing StoresFlagPalFeatures', function (
             return new StatelessFeatures(['feature1' => 'stored']);
         }
 
-        public function saveFlagPalFeatures(array $features): \Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
+        public function saveFlagPalFeatures(array $features): \FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
         {
             return $this;
         }
@@ -165,7 +165,7 @@ it('sets feature value for scope implementing StoresFlagPalFeatures', function (
             return new StatelessFeatures([]);
         }
 
-        public function saveFlagPalFeatures(array $features): \Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
+        public function saveFlagPalFeatures(array $features): \FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
         {
             $this->savedFeatures = $features;
 
@@ -206,7 +206,7 @@ it('deletes feature for scope implementing StoresFlagPalFeatures', function () {
             return new StatelessFeatures($this->features);
         }
 
-        public function saveFlagPalFeatures(array $features): \Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
+        public function saveFlagPalFeatures(array $features): \FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
         {
             $this->savedFeatures = $features;
 

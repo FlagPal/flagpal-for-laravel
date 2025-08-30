@@ -1,6 +1,6 @@
 <?php
 
-use Rapkis\FlagPal\Pennant\StatelessFeatures;
+use FlagPal\FlagPal\Pennant\StatelessFeatures;
 
 it('stores features in a readonly property', function () {
     $features = ['feature1' => 'value1', 'feature2' => 'value2'];

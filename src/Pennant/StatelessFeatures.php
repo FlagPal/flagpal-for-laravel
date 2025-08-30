@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Rapkis\FlagPal\Pennant;
+namespace FlagPal\FlagPal\Pennant;
 
 use Laravel\Pennant\Contracts\FeatureScopeSerializeable;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Rapkis\FlagPal\Validation\Rules;
+namespace FlagPal\FlagPal\Validation\Rules;
 
 class ArrayRule extends AbstractRule
 {

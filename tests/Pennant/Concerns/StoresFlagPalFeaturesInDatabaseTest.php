@@ -4,9 +4,9 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Laravel\Pennant\Drivers\DatabaseDriver;
 use Laravel\Pennant\Feature;
-use Rapkis\FlagPal\Contracts\Pennant\StoresFlagPalFeatures as StoresFlagPalFeaturesContract;
-use Rapkis\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase;
-use Rapkis\FlagPal\Pennant\StatelessFeatures;
+use FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures as StoresFlagPalFeaturesContract;
+use FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase;
+use FlagPal\FlagPal\Pennant\StatelessFeatures;
 
 it('gets features from database', function () {
     $builder = $this->createMock(Builder::class);

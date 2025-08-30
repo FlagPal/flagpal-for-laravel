@@ -1,9 +1,9 @@
 <?php
 
-use Rapkis\FlagPal\Resources\Feature;
-use Rapkis\FlagPal\Resources\FeatureSet;
-use Rapkis\FlagPal\Resources\Funnel;
-use Rapkis\FlagPal\Resources\Metric;
+use FlagPal\FlagPal\Resources\Feature;
+use FlagPal\FlagPal\Resources\FeatureSet;
+use FlagPal\FlagPal\Resources\Funnel;
+use FlagPal\FlagPal\Resources\Metric;
 use Swis\JsonApi\Client\Interfaces\ClientInterface;
 use Swis\JsonApi\Client\Interfaces\ItemInterface;
 use Swis\JsonApi\Client\Interfaces\TypeMapperInterface;
@@ -55,7 +55,7 @@ it('registers the pennant driver', function () {
         ],
     ]);
 
-    /** @var \Rapkis\FlagPal\Pennant\FlagPalDriver $driver */
+    /** @var \FlagPal\FlagPal\Pennant\FlagPalDriver $driver */
     $driver = \Laravel\Pennant\Feature::store('foo')->getDriver();
     expect($driver->flagPal->getProject())->toBe('foo');
 

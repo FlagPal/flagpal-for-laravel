@@ -1,10 +1,10 @@
 <?php
 
-namespace Rapkis\FlagPal\Resources;
+namespace FlagPal\FlagPal\Resources;
 
 use Illuminate\Support\Carbon;
-use Rapkis\FlagPal\Contracts\Resources\Resource;
-use Rapkis\FlagPal\Enums\FunnelKind;
+use FlagPal\FlagPal\Contracts\Resources\Resource;
+use FlagPal\FlagPal\Enums\FunnelKind;
 use Swis\JsonApi\Client\Collection;
 use Swis\JsonApi\Client\Interfaces\ManyRelationInterface;
 use Swis\JsonApi\Client\Item;
