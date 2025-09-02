@@ -44,7 +44,7 @@ it('loads funnels from API', function () {
             'include' => 'featureSets,metrics',
         ])
         ->willReturn($document);
-    $featureRepository->method('all')->willReturn((new Document())->setData(new Collection));
+    $featureRepository->method('all')->willReturn((new Document)->setData(new Collection));
 
     $flagPal->resolveFeatures();
 });
@@ -72,7 +72,7 @@ it('handles API errors', function (?string $logDriver) {
 
     $funnelRepository->method('all')
         ->willReturn($document);
-    $featureRepository->method('all')->willReturn((new Document())->setData(new Collection));
+    $featureRepository->method('all')->willReturn((new Document)->setData(new Collection));
 
     $logger->expects($logDriver ? $this->once() : $this->never())
         ->method('error')
@@ -113,7 +113,7 @@ it('caches funnels', function (?string $driver) {
         ->method('all')
         ->willReturn($document);
 
-    $featureRepository->method('all')->willReturn((new Document())->setData(new Collection));
+    $featureRepository->method('all')->willReturn((new Document)->setData(new Collection));
 
     $parameters = [
         'filter' => ['active' => true],
@@ -288,7 +288,7 @@ it('switches between projects', function () {
         ->method('all')
         ->with($parameters, ['Authorization' => 'Bearer other project secret'])
         ->willReturn($document);
-    $featureRepository->method('all')->willReturn((new Document())->setData(new Collection));
+    $featureRepository->method('all')->willReturn((new Document)->setData(new Collection));
 
     $flagPal
         ->asProject('other project')
