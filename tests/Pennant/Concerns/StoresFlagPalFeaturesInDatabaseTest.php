@@ -183,21 +183,21 @@ it('saves features to database', function () {
     expect($result)->toBe($model);
 });
 
- it('saves nested array feature values to database', function () {
+it('saves nested array feature values to database', function () {
     $builder = $this->createMock(Builder::class);
     $currentFeatures = collect([
         'array_feature' => json_encode(['this' => 'is', 'a' => ['nested', 'array']]),
     ]);
 
-     DB::shouldReceive('connection')
-         ->times(2)
-         ->with(null)
-         ->andReturnSelf();
+    DB::shouldReceive('connection')
+        ->times(2)
+        ->with(null)
+        ->andReturnSelf();
 
-     DB::shouldReceive('table')
-         ->times(2)
-         ->with('features')
-         ->andReturn($builder);
+    DB::shouldReceive('table')
+        ->times(2)
+        ->with('features')
+        ->andReturn($builder);
 
     // For getFlagPalFeatures and other operations
     $builder->expects($this->exactly(2))
@@ -243,7 +243,7 @@ it('saves features to database', function () {
     ]);
 
     expect($result)->toBe($model);
- });
+});
 
 it('saves carbon feature values to database', function () {
     $builder = $this->createMock(Builder::class);
