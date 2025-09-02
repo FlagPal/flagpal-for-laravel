@@ -3,6 +3,7 @@
 namespace FlagPal\FlagPal\Pennant\Concerns;
 
 use FlagPal\FlagPal\Pennant\StatelessFeatures;
+use FlagPal\FlagPal\Support\Arr;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Laravel\Pennant\Drivers\DatabaseDriver;
@@ -30,7 +31,7 @@ trait StoresFlagPalFeaturesInDatabase
         $currentFeatures = $this->getFlagPalFeatures()->features;
         $toDeactivate = array_diff_key($currentFeatures, $features);
         $toDeactivate = collect($toDeactivate)->merge(collect($features)->filter(fn ($value, $name) => $value === null))->toArray();
-        $toActivate = array_filter(array_diff($features, $currentFeatures));
+        $toActivate = array_filter(Arr::diffRecursive($features, $currentFeatures));
 
         if (! empty($toDeactivate)) {
             $this->newFeatureQuery()

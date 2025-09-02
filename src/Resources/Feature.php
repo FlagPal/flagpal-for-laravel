@@ -42,4 +42,16 @@ class Feature extends Item implements Resource
     ];
 
     protected $casts = [self::RULES => 'array'];
+
+    public static function castToKind(string $kind, mixed $value): mixed
+    {
+        return match ($kind) {
+            'string' => is_array($value) ? json_encode($value) : (string) $value,
+            'integer' => (int) $value,
+            'boolean' => (bool) $value,
+            'array' => is_array($value) ? $value : json_decode($value, true),
+            'date' => Carbon::parse($value),
+            default => $value,
+        };
+    }
 }

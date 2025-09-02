@@ -205,4 +205,69 @@ it('validates features by rules', function (array $features, array $rules, bool 
         ],
         false,
     ],
+    [
+        ['green_button' => -1],
+        [
+            [
+                'feature' => 'green_button',
+                'rule' => 'greater_than_equals',
+                'value' => 0,
+            ],
+        ],
+        false,
+    ],
+    [
+        ['green_button' => -1],
+        [
+            [
+                'feature' => 'green_button',
+                'rule' => 'less_than_equals',
+                'value' => 100,
+            ],
+        ],
+        true,
+    ],
+    [
+        ['green_button' => 101],
+        [
+            [
+                'feature' => 'green_button',
+                'rule' => 'less_than_equals',
+                'value' => 100,
+            ],
+        ],
+        false,
+    ],
+    [
+        ['green_button' => 101],
+        [
+            [
+                'feature' => 'green_button',
+                'rule' => 'greater_than_equals',
+                'value' => 0,
+            ],
+            [
+                'feature' => 'green_button',
+                'rule' => 'less_than_equals',
+                'value' => 100,
+            ],
+        ],
+        false,
+    ],
+    [
+        ['green_button' => -1],
+        [
+            [
+                'feature' => 'green_button',
+                'rule' => 'greater_than_equals',
+                'value' => 0,
+            ],
+            [
+                'feature' => 'green_button',
+                'rule' => 'less_than_equals',
+                'value' => 100,
+            ],
+        ],
+        false,
+    ],
 ]);
