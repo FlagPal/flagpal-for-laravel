@@ -4,6 +4,7 @@ use FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures as StoresFlagPalFeat
 use FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase;
 use FlagPal\FlagPal\Pennant\StatelessFeatures;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Laravel\Pennant\Drivers\DatabaseDriver;
 use Laravel\Pennant\Feature;
@@ -182,74 +183,124 @@ it('saves features to database', function () {
     expect($result)->toBe($model);
 });
 
-// it('saves nested array feature values to database', function () {
-//    $builder = $this->createMock(Builder::class);
-//    $collection = collect([
-//        'feature1' => json_encode('old-value'),
-//        'feature2' => json_encode('value2'),
-//    ]);
-//
-//    // For getFlagPalFeatures and other operations
-//    $builder->expects($this->exactly(3))
-//        ->method('where')
-//        ->with('scope', 'test-scope')
-//        ->willReturnSelf();
-//
-//    $builder->expects($this->once())
-//        ->method('pluck')
-//        ->with('value', 'name')
-//        ->willReturn($collection);
-//
-//    // For delete
-//    $builder->expects($this->once())
-//        ->method('whereIn')
-//        ->with('name', ['feature2'])
-//        ->willReturnSelf();
-//
-//    $builder->expects($this->once())
-//        ->method('delete');
-//
-//    // For upsert
-//    $builder->expects($this->once())
-//        ->method('upsert')
-//        ->with($this->callback(function ($items) {
-//            return count($items) === 1
-//                && $items[0]['name'] === 'feature1'
-//                && $items[0]['scope'] === 'test-scope'
-//                && json_decode($items[0]['value']) === 'new-value';
-//        }), ['name', 'scope'], ['value', DatabaseDriver::UPDATED_AT]);
-//
-//    DB::shouldReceive('connection')
-//        ->times(3)
-//        ->with(null)
-//        ->andReturnSelf();
-//
-//    DB::shouldReceive('table')
-//        ->times(3)
-//        ->with('features')
-//        ->andReturn($builder);
-//
-//    $model = new class implements StoresFlagPalFeaturesContract
-//    {
-//        use StoresFlagPalFeaturesInDatabase;
-//
-//        public function __toString()
-//        {
-//            return 'test-model';
-//        }
-//    };
-//
-//    // Mock the Feature::serializeScope method
-//    Feature::shouldReceive('serializeScope')
-//        ->times(4)
-//        ->with($model)
-//        ->andReturn('test-scope');
-//
-//    $result = $model->saveFlagPalFeatures([
-//        'feature1' => 'new-value',
-//        'feature2' => null, // This should be deleted
-//        'feature3' => ['this' => 'is', 'a' => 'nested', 'array' => ['value']],
-//    ]);
-//
-//    expect($result)->toBe($model);
-// });
+ it('saves nested array feature values to database', function () {
+    $builder = $this->createMock(Builder::class);
+    $currentFeatures = collect([
+        'array_feature' => json_encode(['this' => 'is', 'a' => ['nested', 'array']]),
+    ]);
+
+     DB::shouldReceive('connection')
+         ->times(2)
+         ->with(null)
+         ->andReturnSelf();
+
+     DB::shouldReceive('table')
+         ->times(2)
+         ->with('features')
+         ->andReturn($builder);
+
+    // For getFlagPalFeatures and other operations
+    $builder->expects($this->exactly(2))
+        ->method('where')
+        ->with('scope', 'test-scope')
+        ->willReturnSelf();
+
+    $builder->expects($this->once())
+        ->method('pluck')
+        ->with('value', 'name')
+        ->willReturn($currentFeatures);
+
+    $builder->expects($this->never())
+        ->method('delete');
+
+    $this->travelTo('2000-01-01 00:00:01');
+
+    // For upsert
+    $builder->expects($this->once())
+        ->method('upsert')
+        ->with([
+            ['name' => 'array_feature', 'scope' => 'test-scope', 'value' => json_encode(['this' => 'is', 'a' => ['different', 'array']]), 'created_at' => '2000-01-01 00:00:01', 'updated_at' => '2000-01-01 00:00:01'],
+        ], ['name', 'scope'], ['value', DatabaseDriver::UPDATED_AT]);
+
+    $model = new class implements StoresFlagPalFeaturesContract
+    {
+        use StoresFlagPalFeaturesInDatabase;
+
+        public function __toString()
+        {
+            return 'test-model';
+        }
+    };
+
+    // Mock the Feature::serializeScope method
+    Feature::shouldReceive('serializeScope')
+        ->times(3)
+        ->with($model)
+        ->andReturn('test-scope');
+
+    $result = $model->saveFlagPalFeatures([
+        'array_feature' => ['this' => 'is', 'a' => ['different', 'array']],
+    ]);
+
+    expect($result)->toBe($model);
+ });
+
+it('saves carbon feature values to database', function () {
+    $builder = $this->createMock(Builder::class);
+    $currentFeatures = collect();
+
+    DB::shouldReceive('connection')
+        ->times(2)
+        ->with(null)
+        ->andReturnSelf();
+
+    DB::shouldReceive('table')
+        ->times(2)
+        ->with('features')
+        ->andReturn($builder);
+
+    // For getFlagPalFeatures and other operations
+    $builder->expects($this->exactly(2))
+        ->method('where')
+        ->with('scope', 'test-scope')
+        ->willReturnSelf();
+
+    $builder->expects($this->once())
+        ->method('pluck')
+        ->with('value', 'name')
+        ->willReturn($currentFeatures);
+
+    $builder->expects($this->never())
+        ->method('delete');
+
+    $this->travelTo('2000-01-01 00:00:01');
+
+    // For upsert
+    $builder->expects($this->once())
+        ->method('upsert')
+        ->with([
+            ['name' => 'date_feature', 'scope' => 'test-scope', 'value' => '"2000-01-01T00:00:01.000000Z"', 'created_at' => '2000-01-01 00:00:01', 'updated_at' => '2000-01-01 00:00:01'],
+        ], ['name', 'scope'], ['value', DatabaseDriver::UPDATED_AT]);
+
+    $model = new class implements StoresFlagPalFeaturesContract
+    {
+        use StoresFlagPalFeaturesInDatabase;
+
+        public function __toString()
+        {
+            return 'test-model';
+        }
+    };
+
+    // Mock the Feature::serializeScope method
+    Feature::shouldReceive('serializeScope')
+        ->times(3)
+        ->with($model)
+        ->andReturn('test-scope');
+
+    $result = $model->saveFlagPalFeatures([
+        'date_feature' => Carbon::parse('2000-01-01 00:00:01'),
+    ]);
+
+    expect($result)->toBe($model);
+});

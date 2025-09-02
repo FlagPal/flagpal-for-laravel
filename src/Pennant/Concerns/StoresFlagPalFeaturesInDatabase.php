@@ -3,7 +3,6 @@
 namespace FlagPal\FlagPal\Pennant\Concerns;
 
 use FlagPal\FlagPal\Pennant\StatelessFeatures;
-use FlagPal\FlagPal\Support\Arr;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Laravel\Pennant\Drivers\DatabaseDriver;
@@ -31,7 +30,17 @@ trait StoresFlagPalFeaturesInDatabase
         $currentFeatures = $this->getFlagPalFeatures()->features;
         $toDeactivate = array_diff_key($currentFeatures, $features);
         $toDeactivate = collect($toDeactivate)->merge(collect($features)->filter(fn ($value, $name) => $value === null))->toArray();
-        $toActivate = array_filter(Arr::diffRecursive($features, $currentFeatures));
+
+        /*
+         * Comparing JSON values because of two reasons:
+         * - easier to compare objects. and they are stored as json anyways
+         * - array features must be replaced completely if ANY of their internal nested value changes
+         */
+        $toActivate = collect($features)
+            ->filter(fn ($value, $name) => $value !== null)
+            ->map(fn($value, $name) => json_encode($value, flags: JSON_THROW_ON_ERROR))
+            ->diff(collect($currentFeatures)->map(fn($value, $name) => json_encode($value, flags: JSON_THROW_ON_ERROR)))
+            ->toArray();
 
         if (! empty($toDeactivate)) {
             $this->newFeatureQuery()
@@ -40,11 +49,11 @@ trait StoresFlagPalFeaturesInDatabase
                 ->delete();
         }
 
-        $toActivate = collect($toActivate)->map(function ($value, $name) {
+        $toActivate = collect($toActivate)->map(function (string $value, $name) {
             return [
                 'name' => $name,
                 'scope' => Feature::serializeScope($this),
-                'value' => json_encode($value, flags: JSON_THROW_ON_ERROR),
+                'value' => $value,
                 DatabaseDriver::CREATED_AT => now(),
                 DatabaseDriver::UPDATED_AT => now(),
             ];
