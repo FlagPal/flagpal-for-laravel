@@ -70,6 +70,7 @@ class FlagPal
             return [];
         }
 
+
         /** @var \Swis\JsonApi\Client\Collection $features */
         $features = $document->getData();
 
