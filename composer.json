@@ -26,7 +26,7 @@
         "psr/http-factory-implementation": "^1.0",
         "psr/http-message": "^1.0|^2.0",
         "spatie/laravel-package-tools": "^1.16",
-        "swisnl/json-api-client": "^2.4"
+        "swisnl/json-api-client": "^2.6"
     },
     "require-dev": {
         "guzzlehttp/guzzle": "^7.8",
