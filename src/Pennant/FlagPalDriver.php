@@ -76,7 +76,8 @@ class FlagPalDriver implements DefinesFeaturesExternally, Driver
     public function set(string $feature, mixed $scope, mixed $value): void
     {
         if ($scope instanceof StoresFlagPalFeatures) {
-            $scope->saveFlagPalFeatures([$feature => $value]);
+            $currentFeatures = $scope->getFlagPalFeatures()->features;
+            $scope->saveFlagPalFeatures(array_merge($currentFeatures, [$feature => $value]));
         }
     }
 

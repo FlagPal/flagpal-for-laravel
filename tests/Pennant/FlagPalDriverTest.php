@@ -268,3 +268,39 @@ it('returns defined features for scope', function () {
 
     expect($driver->definedFeaturesForScope($scope))->toBe(['feature1', 'feature2']);
 });
+
+it('merges features when activating new ones', function () {
+    $flagPal = $this->createMock(FlagPal::class);
+    $driver = new FlagPalDriver($flagPal);
+
+    $scope = new class implements FeatureScopeSerializeable, StoresFlagPalFeatures
+    {
+        public $savedFeatures = ['feature1' => 'value', 'feature2' => 'value2'];
+
+        public function getFlagPalFeatures(): StatelessFeatures
+        {
+            return new StatelessFeatures($this->savedFeatures);
+        }
+
+        public function saveFlagPalFeatures(array $features): \FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
+        {
+            $this->savedFeatures = $features;
+
+            return $this;
+        }
+
+        public function featureScopeSerialize(): string
+        {
+            return 'delete-features-scope';
+        }
+    };
+
+    $driver->set('feature1', $scope, 'new-value');
+    $driver->set('feature3', $scope, 'value3');
+
+    expect($scope->savedFeatures)->toBe([
+        'feature1' => 'new-value',
+        'feature2' => 'value2',
+        'feature3' => 'value3',
+    ]);
+});
