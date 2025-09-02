@@ -3,9 +3,8 @@
 namespace FlagPal\FlagPal\Resources;
 
 use FlagPal\FlagPal\Contracts\Resources\Resource;
-use Swis\JsonApi\Client\Interfaces\ManyRelationInterface;
+use Swis\JsonApi\Client\Interfaces\OneRelationInterface;
 use Swis\JsonApi\Client\Item;
-use Swis\JsonApi\Client\Relations\HasOneRelation;
 
 /**
  * @property string $metric
@@ -39,12 +38,12 @@ class MetricTimeSeries extends Item implements Resource
         self::TIME_SEGMENT,
     ];
 
-    public function featureSet(): ManyRelationInterface|HasOneRelation
+    public function featureSet(): OneRelationInterface
     {
         return $this->hasOne(FeatureSet::class, self::FEATURE_SET);
     }
 
-    public function metric(): ManyRelationInterface|HasOneRelation
+    public function metric(): OneRelationInterface
     {
         return $this->hasOne(Metric::class);
     }

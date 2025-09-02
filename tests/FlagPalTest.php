@@ -26,9 +26,13 @@ use Swis\JsonApi\Client\ItemHydrator;
 
 it('loads funnels from API', function () {
     $funnelRepository = $this->createMock(FunnelRepository::class);
+    $featureRepository = $this->createStub(FeatureRepository::class);
 
     /** @var FlagPal $flagPal */
-    $flagPal = $this->app->make(FlagPal::class, ['funnelRepository' => $funnelRepository]);
+    $flagPal = $this->app->make(FlagPal::class, [
+        'funnelRepository' => $funnelRepository,
+        'featureRepository' => $featureRepository,
+    ]);
 
     $document = $this->createStub(DocumentInterface::class);
     $document->method('getData')->willReturn(new Collection);
@@ -40,6 +44,7 @@ it('loads funnels from API', function () {
             'include' => 'featureSets,metrics',
         ])
         ->willReturn($document);
+    $featureRepository->method('all')->willReturn((new Document)->setData(new Collection));
 
     $flagPal->resolveFeatures();
 });
@@ -53,9 +58,11 @@ it('handles API errors', function (?string $logDriver) {
     $logManager->method('driver')->willReturn($logger);
 
     $funnelRepository = $this->createStub(FunnelRepository::class);
+    $featureRepository = $this->createStub(FeatureRepository::class);
 
     $flagPal = $this->app->make(FlagPal::class, [
         'funnelRepository' => $funnelRepository,
+        'featureRepository' => $featureRepository,
         'log' => $logManager,
     ]);
 
@@ -65,6 +72,7 @@ it('handles API errors', function (?string $logDriver) {
 
     $funnelRepository->method('all')
         ->willReturn($document);
+    $featureRepository->method('all')->willReturn((new Document)->setData(new Collection));
 
     $logger->expects($logDriver ? $this->once() : $this->never())
         ->method('error')
@@ -91,8 +99,12 @@ it('caches funnels', function (?string $driver) {
     $cache = app(CacheManager::class);
 
     $funnelRepository = $this->createMock(FunnelRepository::class);
+    $featureRepository = $this->createStub(FeatureRepository::class);
 
-    $flagPal = $this->app->make(FlagPal::class, ['funnelRepository' => $funnelRepository]);
+    $flagPal = $this->app->make(FlagPal::class, [
+        'funnelRepository' => $funnelRepository,
+        'featureRepository' => $featureRepository,
+    ]);
 
     $document = $this->createStub(DocumentInterface::class);
     $document->method('getData')->willReturn(new Collection);
@@ -100,6 +112,8 @@ it('caches funnels', function (?string $driver) {
     $funnelRepository->expects($this->once())
         ->method('all')
         ->willReturn($document);
+
+    $featureRepository->method('all')->willReturn((new Document)->setData(new Collection));
 
     $parameters = [
         'filter' => ['active' => true],
@@ -255,8 +269,12 @@ it('switches between projects', function () {
     ]);
 
     $funnelRepository = $this->createMock(FunnelRepository::class);
+    $featureRepository = $this->createStub(FeatureRepository::class);
 
-    $flagPal = $this->app->make(FlagPal::class, ['funnelRepository' => $funnelRepository]);
+    $flagPal = $this->app->make(FlagPal::class, [
+        'funnelRepository' => $funnelRepository,
+        'featureRepository' => $featureRepository,
+    ]);
 
     $document = $this->createStub(DocumentInterface::class);
     $document->method('getData')->willReturn(new Collection);
@@ -270,6 +288,7 @@ it('switches between projects', function () {
         ->method('all')
         ->with($parameters, ['Authorization' => 'Bearer other project secret'])
         ->willReturn($document);
+    $featureRepository->method('all')->willReturn((new Document)->setData(new Collection));
 
     $flagPal
         ->asProject('other project')
