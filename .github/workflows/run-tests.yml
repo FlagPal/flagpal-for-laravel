@@ -2,16 +2,10 @@ name: run-tests
 
 on:
   push:
-    paths:
-      - '**.php'
-      - '.github/workflows/run-tests.yml'
-      - 'phpunit.xml.dist'
-      - 'composer.json'
-      - 'composer.lock'
+  pull_request:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
     timeout-minutes: 5
     strategy:
       fail-fast: true
@@ -24,6 +18,7 @@ jobs:
           - laravel: 11.*
             testbench: 9.*
             carbon: ^2.63
+    runs-on: ${{ matrix.os }}
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
