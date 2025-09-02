@@ -6,5 +6,5 @@ namespace FlagPal\FlagPal\Validation\Rules;
 
 class DateAfterOrEqualRule extends AbstractRule
 {
-    protected static array $declaration = ['date_after_or_equal'];
+    protected static array $declaration = ['after_or_equal:'];
 }

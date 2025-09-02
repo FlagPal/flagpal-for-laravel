@@ -40,7 +40,7 @@ class Validator
                     $laravelRules[$key] = "$laravelRule{$value}";
                 }
             }
-            $result[$rule['feature']] = $laravelRules;
+            $result[$rule['feature']] = array_merge($result[$rule['feature']] ?? [], $laravelRules);
         }
 
         return $result;

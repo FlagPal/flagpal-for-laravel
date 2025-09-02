@@ -10,10 +10,12 @@ use FlagPal\FlagPal\Repositories\FeatureRepository;
 use FlagPal\FlagPal\Repositories\FunnelRepository;
 use FlagPal\FlagPal\Repositories\MetricTimeSeriesRepository;
 use FlagPal\FlagPal\Resources\Actor;
+use FlagPal\FlagPal\Resources\Feature;
 use FlagPal\FlagPal\Resources\FeatureSet;
 use FlagPal\FlagPal\Resources\Funnel;
 use FlagPal\FlagPal\Resources\Metric;
 use FlagPal\FlagPal\Resources\MetricTimeSeries;
+use FlagPal\FlagPal\Validation\Validator;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Log\LogManager;
 use Illuminate\Support\Collection;
@@ -39,6 +41,7 @@ class FlagPal
         protected readonly MetricTimeSeriesRepository $metricTimeSeriesRepository,
         protected readonly ActorRepository $actorRepository,
         protected readonly FeatureRepository $featureRepository,
+        protected readonly Validator $validator,
         protected readonly ResolveFeaturesFromFunnel $resolver,
         protected readonly ItemHydrator $itemHydrator,
         protected readonly CacheManager $cache,
@@ -67,13 +70,16 @@ class FlagPal
             return [];
         }
 
+        /** @var \Swis\JsonApi\Client\Collection $features */
+        $features = $document->getData();
+
         $this->cache()->set(
             $cacheKey,
-            $document->getData()->toArray(),
+            $features->toArray(),
             CarbonInterval::seconds($this->cacheTtlSeconds),
         );
 
-        return $document->getData()->toArray();
+        return $features->toArray();
     }
 
     public function resolveFeatures(array $currentFeatures = []): array
@@ -81,7 +87,9 @@ class FlagPal
         $funnels = $this->loadFunnels();
 
         $this->log()?->debug('FlagPal resolving features', $currentFeatures);
-        // todo validate $currentFeatures by their type or cast them to the correct type
+
+        $currentFeatures = $this->filterInvalidFeatures($currentFeatures);
+
         $features = $funnels->reduce(function (array $features, Funnel $funnel) {
             $set = ($this->resolver)($funnel, $features);
 
@@ -93,6 +101,8 @@ class FlagPal
 
             return array_merge($features, $set->features);
         }, $currentFeatures);
+
+        $features = $this->castFeatureValues($features);
 
         $this->log()?->debug('FlagPal resolved features', $features);
 
@@ -218,5 +228,39 @@ class FlagPal
     protected function headers(): array
     {
         return ['Authorization' => "Bearer {$this->projects[$this->project]['bearer_token']}"];
+    }
+
+    protected function castFeatureValues(array $features): array
+    {
+        $defined = collect($this->definedFeatures());
+
+        return collect($features)
+            ->mapWithKeys(
+                fn (mixed $value, string $name) => [$name => Feature::castToKind($defined->firstWhere('name', $name)['kind'], $value)])
+            ->toArray();
+    }
+
+    protected function filterInvalidFeatures(array $features): array
+    {
+        $defined = $this->definedFeatures();
+
+        return collect($features)->filter(
+            function (mixed $value, string $name) use ($defined) {
+                $rules = collect($defined)->where('name', $name)->first()['rules'] ?? [];
+                $rules = collect($rules)->map(fn (array $rules) => array_merge($rules, ['feature' => $name]))->toArray();
+
+                if (! $this->validator->passes([$name => $value], $rules)) {
+                    $this->log()?->warning('FlagPal failed to validate feature', [
+                        'feature' => $name,
+                        'value' => $value,
+                        'rules' => $rules,
+                    ]);
+
+                    return false;
+                }
+
+                return true;
+            }
+        )->toArray();
     }
 }

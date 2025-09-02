@@ -8,6 +8,7 @@ use FlagPal\FlagPal\Repositories\FeatureRepository;
 use FlagPal\FlagPal\Repositories\FunnelRepository;
 use FlagPal\FlagPal\Repositories\MetricTimeSeriesRepository;
 use FlagPal\FlagPal\Resources\Actor;
+use FlagPal\FlagPal\Resources\Feature;
 use FlagPal\FlagPal\Resources\FeatureSet;
 use FlagPal\FlagPal\Resources\Funnel;
 use FlagPal\FlagPal\Resources\Metric;
@@ -155,6 +156,21 @@ it('resolves features from all funnels', function () {
 
     $cache->set($cacheKey, new \Illuminate\Support\Collection([$funnel]));
 
+    $cache->set('flagpal-features-My Project', [
+        [
+            Feature::NAME => 'test',
+            Feature::KIND => 'string',
+        ],
+        [
+            Feature::NAME => 'current',
+            Feature::KIND => 'string',
+        ],
+        [
+            Feature::NAME => 'bar',
+            Feature::KIND => 'array',
+        ],
+    ]);
+
     $resolver->expects($this->once())
         ->method('__invoke')
         ->with($funnel, ['current' => 'features'])
@@ -200,6 +216,21 @@ it('skips funnel if no set was resolved', function () {
     ], '1234');
 
     $cache->set($cacheKey, new \Illuminate\Support\Collection([$funnel]));
+
+    $cache->set('flagpal-features-My Project', [
+        [
+            Feature::NAME => 'test',
+            Feature::KIND => 'string',
+        ],
+        [
+            Feature::NAME => 'current',
+            Feature::KIND => 'string',
+        ],
+        [
+            Feature::NAME => 'bar',
+            Feature::KIND => 'array',
+        ],
+    ]);
 
     $features = $flagPal->resolveFeatures(['current' => 'features']);
 
@@ -470,3 +501,59 @@ it('handles API errors when retrieving defined features', function (?string $log
     ['null'],
     [null],
 ]);
+
+it('casts feature values by their kind', function () {
+    /** @var CacheManager $cache */
+    $cache = app(CacheManager::class);
+
+    $flagPal = $this->app->make(FlagPal::class);
+
+    $parameters = [
+        'filter' => ['active' => true],
+        'include' => 'featureSets,metrics',
+    ];
+    $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
+
+    $cache->set($cacheKey, new \Illuminate\Support\Collection);
+
+    $cache->set('flagpal-features-My Project', [
+        [
+            Feature::NAME => 'current',
+            Feature::KIND => 'integer',
+        ],
+    ]);
+
+    $features = $flagPal->resolveFeatures(['current' => '-1']);
+
+    expect($features)->toBe(['current' => -1]);
+});
+
+it('filters invalid features by their own rules', function () {
+    /** @var CacheManager $cache */
+    $cache = app(CacheManager::class);
+
+    $flagPal = $this->app->make(FlagPal::class);
+
+    $parameters = [
+        'filter' => ['active' => true],
+        'include' => 'featureSets,metrics',
+    ];
+    $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
+
+    $cache->set($cacheKey, new \Illuminate\Support\Collection);
+
+    $cache->set('flagpal-features-My Project', [
+        [
+            Feature::NAME => 'current',
+            Feature::KIND => 'integer',
+            Feature::RULES => [
+                ['rule' => 'greater_than_equals', 'value' => '0'],
+                ['rule' => 'less_than_equals', 'value' => '100'],
+            ],
+        ],
+    ]);
+
+    $features = $flagPal->resolveFeatures(['current' => '-1']);
+
+    expect($features)->toBe([])->and($flagPal->getEnteredFunnels())->toBe([]);
+});
