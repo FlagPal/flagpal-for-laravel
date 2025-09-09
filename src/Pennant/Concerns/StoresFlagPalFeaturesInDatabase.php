@@ -63,6 +63,8 @@ trait StoresFlagPalFeaturesInDatabase
             ->where('scope', Feature::serializeScope($this))
             ->upsert($toActivate->toArray(), ['name', 'scope'], ['value', DatabaseDriver::UPDATED_AT]);
 
+        $this->cachedFeatures = new StatelessFeatures(array_filter($features));
+
         return $this;
     }
 
