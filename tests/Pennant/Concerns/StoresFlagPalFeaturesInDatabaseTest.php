@@ -180,6 +180,8 @@ it('saves features to database', function () {
         'feature2' => null, // This should be deleted
     ]);
 
+    expect($model->getFlagPalFeatures()->features)->toBe(['feature1' => 'new-value']);
+
     expect($result)->toBe($model);
 });
 
