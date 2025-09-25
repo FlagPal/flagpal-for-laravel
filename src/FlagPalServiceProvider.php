@@ -47,7 +47,6 @@ class FlagPalServiceProvider extends PackageServiceProvider
         $this->registerSharedTypeMapper();
         $this->registerParsers();
         $this->registerClients();
-        $this->registerPennantDriver();
     }
 
     protected function registerSharedTypeMapper()
@@ -94,5 +93,7 @@ class FlagPalServiceProvider extends PackageServiceProvider
         foreach ($this->items as $class) {
             $mapper->setMapping($class::TYPE, $class);
         }
+
+        $this->registerPennantDriver();
     }
 }
