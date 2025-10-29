@@ -184,7 +184,7 @@ it('saves features to database', function () {
         'feature3' => false,
     ]);
 
-    expect($model->getFlagPalFeatures()->features)->toBe(['feature1' => 'new-value', 'feature3' => false]);;
+    expect($model->getFlagPalFeatures()->features)->toBe(['feature1' => 'new-value', 'feature3' => false]);
 
     expect($result)->toBe($model);
 });
