@@ -143,10 +143,13 @@ it('saves features to database', function () {
     $builder->expects($this->once())
         ->method('upsert')
         ->with($this->callback(function ($items) {
-            return count($items) === 1
+            return count($items) === 2
                 && $items[0]['name'] === 'feature1'
                 && $items[0]['scope'] === 'test-scope'
-                && json_decode($items[0]['value']) === 'new-value';
+                && json_decode($items[0]['value']) === 'new-value'
+                && $items[1]['name'] === 'feature3'
+                && $items[1]['scope'] === 'test-scope'
+                && json_decode($items[1]['value']) === false;
         }), ['name', 'scope'], ['value', DatabaseDriver::UPDATED_AT]);
 
     DB::shouldReceive('connection')
@@ -171,16 +174,17 @@ it('saves features to database', function () {
 
     // Mock the Feature::serializeScope method
     Feature::shouldReceive('serializeScope')
-        ->times(4)
+        ->times(5)
         ->with($model)
         ->andReturn('test-scope');
 
     $result = $model->saveFlagPalFeatures([
         'feature1' => 'new-value',
         'feature2' => null, // This should be deleted
+        'feature3' => false,
     ]);
 
-    expect($model->getFlagPalFeatures()->features)->toBe(['feature1' => 'new-value']);
+    expect($model->getFlagPalFeatures()->features)->toBe(['feature1' => 'new-value', 'feature3' => false]);
 
     expect($result)->toBe($model);
 });
