@@ -5,16 +5,19 @@
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/flagpal/flagpal-for-laravel/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/flagpal/flagpal-for-laravel/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/flagpal/flagpal-for-laravel.svg?style=flat-square)](https://packagist.org/packages/flagpal/flagpal-for-laravel)
 
-FlagPal is a Laravel package for resolving feature flags provided via flagpal.com API. It allows you to incrementally roll out new features, perform A/B testing, and manage feature access across your application with ease.
+### FlagPal is the batteries you were missing in Laravel Pennant 🔋
+This powerful Laravel Pennant driver lets you control feature flags and run A/B tests using the familiar Pennant syntax. 
+Use it to roll out features, run experiments, or use it for remote configuration.
 
 ## Features
 
+- Drop-in driver for Laravel Pennant
 - Resolve feature flags from a remote API
-- Support for multiple projects with different configurations
 - Local resolution and built-in caching for improved performance
-- Metric recording for feature usage
-- Actor management for user-specific features
-- Comprehensive logging
+- Support for multiple projects with different configurations
+- Metric recording for tracking experiment performance
+- Local or remote feature flag storage options for your users
+- Non-opinionated, scalable solution to cover any business or technical needs 
 
 ## Installation
 
@@ -28,6 +31,39 @@ You can publish the config file with:
 
 ```bash
 php artisan vendor:publish --tag="flagpal-for-laravel-config"
+```
+
+### Pennant quick start
+
+This package registers a Laravel Pennant driver named `flagpal`.
+
+1) Add the store to your `config/pennant.php`:
+
+```php
+return [
+    'stores' => [
+        'flagpal' => [
+            'driver' => 'flagpal',
+            // 'project' => null, // optional, uses the default project from config/flagpal.php
+        ],
+    ],
+];
+```
+
+2) Use the driver with Pennant's Feature facade:
+
+```php
+use Laravel\Pennant\Feature;
+
+// If 'flagpal' is your default store in config/pennant.php
+if (Feature::active('new-api')) {
+    // ...
+}
+
+// Or explicitly select the driver
+if (Feature::store('flagpal')->active('new-api')) {
+    // ...
+}
 ```
 
 ## Configuration
@@ -56,8 +92,14 @@ After publishing the configuration file, you'll find it at `config/flagpal.php`.
 ],
 ```
 
+Need multiple FlagPal projects? See the section ["Working with Multiple FlagPal Projects"](#working-with-multiple-flagpal-projects) below for a full example.
+
 ### Caching Options
 
+Even though FlagPal resolves feature flags locally, all the initial setup needs to be retrieved from a remote API. 
+For this reason caching is necessary to ensure your application's performance. 
+Without a caching layer, local feature resolution becomes impossible as every single feature check would call the FlagPal API.
+Using your default application cache driver is usually enough, but you can change it in the `flagpal.php` config file.
 ```php
 'cache' => [
     'driver' => 'default', // Use any cache driver from your cache.php config
@@ -67,13 +109,14 @@ After publishing the configuration file, you'll find it at `config/flagpal.php`.
 
 ### Logging Options
 
+Logging
 ```php
 'log' => [
     'driver' => 'default', // Use any log driver from your logging.php config
 ],
 ```
 
-## Usage
+## Using with Laravel Pennant
 
 FlagPal is designed in a way to adapt to your application needs. You can use as many or as little features as you'd like.
 At the core, it consists of three basic concepts:
@@ -84,7 +127,7 @@ At the core, it consists of three basic concepts:
 With this concept in mind, you can start resolving your features by chaining Experiments or Experiences one after another, and passing your features every time.
 
 #### Pennant
-As this is a Laravel package, it comes with a Laravel Pennant driver. FlagPal works completely with or without the driver. Examples will include usage for both cases.
+As this is a Laravel package, it comes with a Laravel Pennant driver. FlagPal works completely with or without the driver. This section focuses on Pennant usage; for standalone (non-Pennant) examples, see "Using without Laravel Pennant" below.
 Keep in mind that FlagPal's goal is to give you **options**, while Pennant is rather opinionated. All of Pennant's and FlagPal's features coexist and may simply need a bit more verbose configuration.
 Since there is a lot of Laravel "magic" going behind the hood, please see this section on how to configure the Laravel Pennant driver.
 
@@ -107,23 +150,6 @@ if (Feature::active('new-api')) {
 ```
 
 
-#### Without Pennant
-```php
-use FlagPal\FlagPal\FlagPal;
-
-// Create a FlagPal instance or use dependency injection
-$flagPal = app(FlagPal::class);
-
-// Resolve features (returns an array of active features)
-$features = $flagPal->resolveFeatures();
-
-// Check if a specific feature is active. You define these features in FlagPal's dashboard
-if (in_array('new-api', $features)) {
-    // Use the new API
-} else {
-    // Use the legacy API
-}
-```
 
 ### Rich Feature Values
 
@@ -143,23 +169,6 @@ if (Feature::value('checkout-flow') === 'multi-step') {
 }
 ```
 
-#### Without Pennant
-```php
-use FlagPal\FlagPal\FlagPal;
-
-// Create a FlagPal instance or use dependency injection
-$flagPal = app(FlagPal::class);
-
-// Resolve features (returns an array of active features)
-$features = $flagPal->resolveFeatures();
-
-// Check a value of a specific feature
-if ($features['checkout-flow'] === 'multi-step') {
-    // Render a multi-step checkout flow
-} else {
-    // Render the checkout within a single page
-}
-```
 
 ### Resolving with pre-existing features
 
@@ -186,31 +195,6 @@ if (Feature::for($currentFeatures)->active('show-trial-reminder')) {
 }
 ```
 
-#### Without Pennant
-
-```php
-use FlagPal\FlagPal\FlagPal;
-
-// Create a FlagPal instance or use dependency injection
-$flagPal = app(FlagPal::class);
-
-// Flags and values can be anything defined in your application
-// and have the same names defined in FlagPal's dashboard
-
-// These feature values can be retrieved from anywhere: your the database (like your User model), cache, other Pennant drivers. It's up to you
-$currentFeatures = [
-    'dark-mode' => true,
-    'checkout-flow' => 'single-page',
-    'trial-days-remaining' => 14,
-];
-
-$features = $flagPal->resolveFeatures($currentFeatures);
-
-// Check if a specific feature is active
-if (in_array('show-trial-reminder', $features)) {
-    // Trigger some promotional message
-}
-```
 
 ### Working with Multiple FlagPal Projects
 First, make sure you have your project configured in `config/flagpal.php`
@@ -257,17 +241,6 @@ return [
 Feature::driver('flagpal_project_b')->all();
 ```
 
-#### Without Pennant
-
-```php
-use FlagPal\FlagPal\FlagPal;
-
-// Create a FlagPal instance or use dependency injection
-$flagPal = app(FlagPal::class);
-
-// Switch to a specific project
-$features = $flagPal->asProject('project_b')->resolveFeatures();
-```
 
 [//]: # TODO()
 ### Recording Metrics
@@ -354,33 +327,7 @@ FlagPal logs errors when API operations fail. Configure the logging driver:
 ],
 ```
 
-## Laravel Pennant Integration
-
-This package includes a custom driver for [Laravel Pennant](https://github.com/laravel/pennant), Laravel's feature flag package. This allows you to use FlagPal within Laravel Pennant.
-
-### Configuration
-
-To use the FlagPal driver with Laravel Pennant, update your `config/pennant.php` file:
-
-```php
-'stores' => [
-    'flagpal' => [
-        'driver' => 'flagpal',
-    ],
-],
-```
-
-### Basic Usage
-
-Once configured, you can use Laravel Pennant as usual:
-
-```php
-use Laravel\Pennant\Feature;
-
-if (Feature::active('new-api')) {
-    // The feature is active
-}
-```
+## Advanced Pennant usage
 
 ### Scoped Features
 
@@ -452,6 +399,50 @@ $user = User::first();
 // resolving features will automatically store all their values for your scope in FlagPal itself.
 $user->features()->all(); // ['some-feature' => 'you-have-by-default', 'some-other-feature' => 'resolved-from-flagpal']
 ```
+
+## Using without Laravel Pennant
+
+FlagPal can be used entirely without Laravel Pennant. This is useful if you prefer a lightweight integration, or need full control beyond Laravel Pennant.
+
+- Resolve features and check flags:
+
+```php
+use FlagPal\FlagPal\FlagPal;
+
+$flagPal = app(FlagPal::class);
+
+$features = $flagPal->resolveFeatures();
+
+if (in_array('new-api', $features)) {
+    // feature is active
+}
+```
+
+- Read rich feature values:
+
+```php
+$features = $flagPal->resolveFeatures();
+$value = $features['checkout-flow'] ?? null; // e.g. 'multi-step'
+```
+
+- Provide pre-existing features for context (e.g. from your DB/cache):
+
+```php
+$current = [
+    'dark-mode' => true,
+    'trial-days-remaining' => 14,
+];
+
+$features = $flagPal->resolveFeatures($current);
+```
+
+- Work with multiple FlagPal projects:
+
+```php
+$features = $flagPal->asProject('project_b')->resolveFeatures();
+```
+
+This section contains all standalone (non-Pennant) examples in one place.
 
 ## Testing
 
