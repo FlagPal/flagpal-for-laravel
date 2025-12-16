@@ -36,6 +36,8 @@ class FlagPal
 
     private int $cacheTtlSeconds;
 
+    private ?Collection $funnels = null;
+
     public function __construct(
         protected readonly FunnelRepository $funnelRepository,
         protected readonly MetricTimeSeriesRepository $metricTimeSeriesRepository,
@@ -84,7 +86,7 @@ class FlagPal
 
     public function resolveFeatures(array $currentFeatures = []): array
     {
-        $funnels = $this->loadFunnels();
+        $funnels = $this->getFunnels();
 
         $this->log()?->debug('FlagPal resolving features', $currentFeatures);
 
@@ -159,6 +161,11 @@ class FlagPal
         $actor = $this->actorRepository->create($actor, [], $this->headers())->getData();
 
         return $actor;
+    }
+
+    public function getFunnels(): Collection
+    {
+        return $this->funnels ?? ($this->funnels = $this->loadFunnels());
     }
 
     protected function loadFunnels(): Collection
