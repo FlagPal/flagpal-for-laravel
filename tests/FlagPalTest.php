@@ -14,6 +14,7 @@ use FlagPal\FlagPal\Resources\Funnel;
 use FlagPal\FlagPal\Resources\Metric;
 use FlagPal\FlagPal\Resources\MetricTimeSeries;
 use Illuminate\Cache\CacheManager;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Log\LogManager;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -136,6 +137,35 @@ it('caches funnels', function (?string $driver) {
     ['array'],
     [null],
 ]);
+
+it('caches funnels internally', function () {
+    config(['flagpal.cache.driver' => 'array']);
+
+    $funnelRepository = $this->createStub(FunnelRepository::class);
+    $featureRepository = $this->createStub(FeatureRepository::class);
+    $cacheManager = $this->createStub(CacheManager::class);
+    $cache = $this->createMock(Repository::class);
+    $cacheManager->method('driver')->willReturn($cache);
+
+    $flagPal = $this->app->make(FlagPal::class, [
+        'funnelRepository' => $funnelRepository,
+        'featureRepository' => $featureRepository,
+        'cache' => $cacheManager,
+    ]);
+
+    $parameters = [
+        'filter' => ['active' => true],
+        'include' => 'featureSets,metrics',
+    ];
+    $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
+
+    $cache->expects($this->once())->method('get')->with($cacheKey)->willReturn(new \Illuminate\Support\Collection);
+
+    $flagPal->getFunnels();
+
+    // won't hit cache a second time
+    $flagPal->getFunnels();
+});
 
 it('resolves features from all funnels', function () {
     $resolver = $this->createMock(ResolveFeaturesFromFunnel::class);
