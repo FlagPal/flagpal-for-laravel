@@ -577,6 +577,45 @@ it('casts feature values by their kind', function () {
     expect($features)->toBe(['current' => -1]);
 });
 
+it('excludes undefined features from cast and logs error', function (?string $logDriver) {
+    config(['flagpal.log.driver' => $logDriver]);
+
+    $logManager = $this->createStub(LogManager::class);
+    $logger = $this->createMock(LoggerInterface::class);
+    $logManager->method('driver')->willReturn($logger);
+
+    /** @var CacheManager $cache */
+    $cache = app(CacheManager::class);
+
+    $flagPal = $this->app->make(FlagPal::class, ['log' => $logManager]);
+
+    $parameters = [
+        'filter' => ['active' => true],
+        'include' => 'featureSets,metrics',
+    ];
+    $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
+
+    $cache->set($cacheKey, new \Illuminate\Support\Collection);
+
+    $cache->set('flagpal-features-My Project', [
+        [
+            Feature::NAME => 'current',
+            Feature::KIND => 'integer',
+        ],
+    ]);
+
+    $logger->expects($logDriver ? $this->once() : $this->never())
+        ->method('error')
+        ->with('FlagPal feature is not defined', ['feature' => 'undefined_feature']);
+
+    $features = $flagPal->resolveFeatures(['current' => '5', 'undefined_feature' => 'foo']);
+
+    expect($features)->toBe(['current' => 5]);
+})->with([
+    ['default'],
+    [null],
+]);
+
 it('filters invalid features by their own rules', function () {
     /** @var CacheManager $cache */
     $cache = app(CacheManager::class);
