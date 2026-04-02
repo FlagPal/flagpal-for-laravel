@@ -242,6 +242,15 @@ class FlagPal
         $defined = collect($this->definedFeatures());
 
         return collect($features)
+            ->filter(function (mixed $value, string $name) use ($defined) {
+                if ($defined->firstWhere('name', $name) === null) {
+                    $this->log()?->error('FlagPal feature is not defined', ['feature' => $name]);
+
+                    return false;
+                }
+
+                return true;
+            })
             ->mapWithKeys(
                 fn (mixed $value, string $name) => [$name => Feature::castToKind($defined->firstWhere('name', $name)['kind'], $value)])
             ->toArray();
