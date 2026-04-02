@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Cache;
 use Psr\Log\LoggerInterface;
 use Swis\JsonApi\Client\Collection;
 use Swis\JsonApi\Client\Document;
+use Swis\JsonApi\Client\Error;
 use Swis\JsonApi\Client\ErrorCollection;
 use Swis\JsonApi\Client\Interfaces\DocumentInterface;
 use Swis\JsonApi\Client\ItemHydrator;
@@ -67,7 +68,7 @@ it('handles API errors', function (?string $logDriver) {
         'log' => $logManager,
     ]);
 
-    $errors = new ErrorCollection([new \Swis\JsonApi\Client\Error('123', null, '401', '401')]);
+    $errors = new ErrorCollection([new Error('123', null, '401', '401')]);
     $document = new Document;
     $document->setErrors($errors);
 
@@ -128,7 +129,7 @@ it('caches funnels', function (?string $driver) {
 
     expect($cache->has($cacheKey))->toBeTrue()
         ->and($cache->get($cacheKey))
-        ->toBeInstanceOf(\Illuminate\Support\Collection::class);
+        ->toBeInstanceOf(Illuminate\Support\Collection::class);
 
     // won't hit the API a second time
     $flagPal->resolveFeatures();
@@ -159,7 +160,7 @@ it('caches funnels internally', function () {
     ];
     $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
 
-    $cache->expects($this->once())->method('get')->with($cacheKey)->willReturn(new \Illuminate\Support\Collection);
+    $cache->expects($this->once())->method('get')->with($cacheKey)->willReturn(new Illuminate\Support\Collection);
 
     $flagPal->getFunnels();
 
@@ -198,7 +199,7 @@ it('resolves features from all funnels', function () {
         ],
     ], '1234');
 
-    $cache->set($cacheKey, new \Illuminate\Support\Collection([$funnel]));
+    $cache->set($cacheKey, new Illuminate\Support\Collection([$funnel]));
 
     $cache->set('flagpal-features-My Project', [
         [
@@ -259,7 +260,7 @@ it('skips funnel if no set was resolved', function () {
         ],
     ], '1234');
 
-    $cache->set($cacheKey, new \Illuminate\Support\Collection([$funnel]));
+    $cache->set($cacheKey, new Illuminate\Support\Collection([$funnel]));
 
     $cache->set('flagpal-features-My Project', [
         [
@@ -333,7 +334,7 @@ it('records a metric', function (bool $hasErrors) {
 
     $document = new Document;
     if ($hasErrors) {
-        $errors = new ErrorCollection([new \Swis\JsonApi\Client\Error('123', null, '401', '401')]);
+        $errors = new ErrorCollection([new Error('123', null, '401', '401')]);
         $document->setErrors($errors);
     }
 
@@ -528,7 +529,7 @@ it('handles API errors when retrieving defined features', function (?string $log
         'log' => $logManager,
     ]);
 
-    $errors = new ErrorCollection([new \Swis\JsonApi\Client\Error('123', null, '401', '401')]);
+    $errors = new ErrorCollection([new Error('123', null, '401', '401')]);
     $document = new Document;
     $document->setErrors($errors);
 
@@ -563,7 +564,7 @@ it('casts feature values by their kind', function () {
     ];
     $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
 
-    $cache->set($cacheKey, new \Illuminate\Support\Collection);
+    $cache->set($cacheKey, new Illuminate\Support\Collection);
 
     $cache->set('flagpal-features-My Project', [
         [
@@ -595,7 +596,7 @@ it('excludes undefined features from cast and logs error', function (?string $lo
     ];
     $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
 
-    $cache->set($cacheKey, new \Illuminate\Support\Collection);
+    $cache->set($cacheKey, new Illuminate\Support\Collection);
 
     $cache->set('flagpal-features-My Project', [
         [
@@ -628,7 +629,7 @@ it('filters invalid features by their own rules', function () {
     ];
     $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
 
-    $cache->set($cacheKey, new \Illuminate\Support\Collection);
+    $cache->set($cacheKey, new Illuminate\Support\Collection);
 
     $cache->set('flagpal-features-My Project', [
         [

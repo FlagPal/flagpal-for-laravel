@@ -136,7 +136,7 @@ it('gets feature value for scope implementing StoresFlagPalFeatures', function (
             return new StatelessFeatures(['feature1' => 'stored']);
         }
 
-        public function saveFlagPalFeatures(array $features): \FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
+        public function saveFlagPalFeatures(array $features): StoresFlagPalFeatures
         {
             return $this;
         }
@@ -165,7 +165,7 @@ it('sets feature value for scope implementing StoresFlagPalFeatures', function (
             return new StatelessFeatures([]);
         }
 
-        public function saveFlagPalFeatures(array $features): \FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
+        public function saveFlagPalFeatures(array $features): StoresFlagPalFeatures
         {
             $this->savedFeatures = $features;
 
@@ -206,7 +206,7 @@ it('deletes feature for scope implementing StoresFlagPalFeatures', function () {
             return new StatelessFeatures($this->features);
         }
 
-        public function saveFlagPalFeatures(array $features): \FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
+        public function saveFlagPalFeatures(array $features): StoresFlagPalFeatures
         {
             $this->savedFeatures = $features;
 
@@ -282,7 +282,7 @@ it('merges features when activating new ones', function () {
             return new StatelessFeatures($this->savedFeatures);
         }
 
-        public function saveFlagPalFeatures(array $features): \FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures
+        public function saveFlagPalFeatures(array $features): StoresFlagPalFeatures
         {
             $this->savedFeatures = $features;
 

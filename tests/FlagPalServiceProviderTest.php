@@ -1,5 +1,6 @@
 <?php
 
+use FlagPal\FlagPal\Pennant\FlagPalDriver;
 use FlagPal\FlagPal\Resources\Feature;
 use FlagPal\FlagPal\Resources\FeatureSet;
 use FlagPal\FlagPal\Resources\Funnel;
@@ -55,10 +56,10 @@ it('registers the pennant driver', function () {
         ],
     ]);
 
-    /** @var \FlagPal\FlagPal\Pennant\FlagPalDriver $driver */
-    $driver = \Laravel\Pennant\Feature::store('foo')->getDriver();
+    /** @var FlagPalDriver $driver */
+    $driver = Laravel\Pennant\Feature::store('foo')->getDriver();
     expect($driver->flagPal->getProject())->toBe('foo');
 
-    $driver = \Laravel\Pennant\Feature::store('bar')->getDriver();
+    $driver = Laravel\Pennant\Feature::store('bar')->getDriver();
     expect($driver->flagPal->getProject())->toBe('Bar');
 });
