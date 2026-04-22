@@ -36,7 +36,11 @@ class FlagPal
 
     private int $cacheTtlSeconds;
 
-    private ?Collection $funnels = null;
+    /** @var array<string, Collection> */
+    private array $funnels = [];
+
+    /** @var array<string, array> */
+    private array $definedFeatures = [];
 
     public function __construct(
         protected readonly FunnelRepository $funnelRepository,
@@ -55,6 +59,11 @@ class FlagPal
     }
 
     public function definedFeatures(): array
+    {
+        return $this->definedFeatures[$this->project] ??= $this->loadDefinedFeatures();
+    }
+
+    protected function loadDefinedFeatures(): array
     {
         $cacheKey = "flagpal-features-{$this->project}";
 
@@ -165,7 +174,29 @@ class FlagPal
 
     public function getFunnels(): Collection
     {
-        return $this->funnels ?? ($this->funnels = $this->loadFunnels());
+        return $this->funnels[$this->project] ??= $this->loadFunnels();
+    }
+
+    public function forgetDefinedFeaturesCache(?string $project = null): void
+    {
+        if ($project === null) {
+            $this->definedFeatures = [];
+
+            return;
+        }
+
+        unset($this->definedFeatures[$project]);
+    }
+
+    public function forgetFunnelsCache(?string $project = null): void
+    {
+        if ($project === null) {
+            $this->funnels = [];
+
+            return;
+        }
+
+        unset($this->funnels[$project]);
     }
 
     protected function loadFunnels(): Collection
