@@ -11,6 +11,7 @@ use Swis\JsonApi\Client\Item;
  * @property string $featureSet
  * @property string $value
  * @property string $timeSegment
+ * @property array $features
  */
 class MetricTimeSeries extends Item implements Resource
 {
@@ -21,6 +22,8 @@ class MetricTimeSeries extends Item implements Resource
     public const VALUE = 'value';
 
     public const TIME_SEGMENT = 'time_segment';
+
+    public const FEATURES = 'features';
 
     public const TYPE = 'metric-time-series';
 
@@ -36,7 +39,10 @@ class MetricTimeSeries extends Item implements Resource
         self::FEATURE_SET,
         self::VALUE,
         self::TIME_SEGMENT,
+        self::FEATURES,
     ];
+
+    protected $casts = [self::FEATURES => 'array'];
 
     public function featureSet(): OneRelationInterface
     {

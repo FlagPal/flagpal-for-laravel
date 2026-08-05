@@ -283,6 +283,10 @@ $featureSet = new FeatureSet(['id' => 'checkout-v2']);
 
 // Record a metric with a value
 app(FlagPal::class)->recordMetric($metric, $featureSet, 1);
+
+// Optionally segment the metric by feature values (only features enabled for
+// segmentation on the metric are recorded; the value is always recorded)
+app(FlagPal::class)->recordMetric($metric, $featureSet, 1, features: ['country' => 'US']);
 ```
 
 ### Managing Actors (optional)

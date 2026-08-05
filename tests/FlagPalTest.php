@@ -345,6 +345,7 @@ it('records a metric', function (bool $hasErrors) {
         MetricTimeSeries::FEATURE_SET => $set->toJsonApiArray(),
         MetricTimeSeries::VALUE => 100,
         MetricTimeSeries::TIME_SEGMENT => $date = Carbon::now(),
+        MetricTimeSeries::FEATURES => [],
     ]);
 
     $metricTimeSeriesRepository->expects($this->once())
@@ -363,6 +364,35 @@ it('records a metric', function (bool $hasErrors) {
     [false],
     [true],
 ]);
+
+it('records a metric segmented by feature values', function () {
+    $metricTimeSeriesRepository = $this->createMock(MetricTimeSeriesRepository::class);
+
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, ['metricTimeSeriesRepository' => $metricTimeSeriesRepository]);
+
+    $document = new Document;
+
+    $metric = (new Metric)->setId('123');
+    $set = (new FeatureSet)->setId('123');
+    $features = ['country' => 'US', 'locale' => 'EN'];
+    $payload = app(ItemHydrator::class)->hydrate(new MetricTimeSeries, [
+        MetricTimeSeries::METRIC => $metric->toJsonApiArray(),
+        MetricTimeSeries::FEATURE_SET => $set->toJsonApiArray(),
+        MetricTimeSeries::VALUE => 100,
+        MetricTimeSeries::TIME_SEGMENT => $date = Carbon::now(),
+        MetricTimeSeries::FEATURES => $features,
+    ]);
+
+    $metricTimeSeriesRepository->expects($this->once())
+        ->method('create')
+        ->with($payload)
+        ->willReturn($document);
+
+    $success = $flagPal->recordMetric($metric, $set, 100, $date, $features);
+
+    expect($success)->toBeTrue();
+});
 
 it('gets actor by reference', function (DocumentInterface $repositoryResult, ?Actor $expected) {
     $actorRepository = $this->createMock(ActorRepository::class);

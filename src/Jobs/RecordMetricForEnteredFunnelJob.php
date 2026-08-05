@@ -21,6 +21,7 @@ class RecordMetricForEnteredFunnelJob implements ShouldQueue
         public readonly string $metric,
         public readonly int $value,
         public readonly ?\DateTimeInterface $dateTime = null,
+        public readonly array $features = [],
     ) {}
 
     public function handle(FlagPal $flagPal): void
@@ -31,7 +32,7 @@ class RecordMetricForEnteredFunnelJob implements ShouldQueue
             return;
         }
 
-        $success = $flagPal->recordMetric($metric, $this->entry->set, $this->value, $this->dateTime);
+        $success = $flagPal->recordMetric($metric, $this->entry->set, $this->value, $this->dateTime, $this->features);
 
         if (! $success) {
             $this->fail('FlagPal failed to record a metric');
