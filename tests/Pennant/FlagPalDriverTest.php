@@ -93,6 +93,106 @@ it('gets all features for multiple scopes', function () {
         ->and($result['feature2'][0])->toBe('value2');
 });
 
+it('resolves and saves features once per scope, not once per feature, in getAll', function () {
+    $flagPal = $this->createMock(FlagPal::class);
+    $flagPal->method('definedFeatures')
+        ->willReturn([
+            ['name' => 'feature1'],
+            ['name' => 'feature2'],
+        ]);
+
+    $flagPal->expects($this->once())
+        ->method('definedFeatures');
+
+    $flagPal->expects($this->exactly(2))
+        ->method('resolveFeatures')
+        ->willReturnCallback(function ($features) {
+            return $features + ['feature1' => 'value1', 'feature2' => 'value2'];
+        });
+
+    $driver = new FlagPalDriver($flagPal);
+
+    $scope1 = new class implements FeatureScopeSerializeable, StoresFlagPalFeatures
+    {
+        public $saveCalls = 0;
+
+        public function getFlagPalFeatures(): StatelessFeatures
+        {
+            return new StatelessFeatures([]);
+        }
+
+        public function saveFlagPalFeatures(array $features): StoresFlagPalFeatures
+        {
+            $this->saveCalls++;
+
+            return $this;
+        }
+
+        public function featureScopeSerialize(): string
+        {
+            return 'scope1';
+        }
+    };
+
+    $scope2 = new class implements FeatureScopeSerializeable, StoresFlagPalFeatures
+    {
+        public $saveCalls = 0;
+
+        public function getFlagPalFeatures(): StatelessFeatures
+        {
+            return new StatelessFeatures([]);
+        }
+
+        public function saveFlagPalFeatures(array $features): StoresFlagPalFeatures
+        {
+            $this->saveCalls++;
+
+            return $this;
+        }
+
+        public function featureScopeSerialize(): string
+        {
+            return 'scope2';
+        }
+    };
+
+    $result = $driver->getAll([
+        'feature1' => [$scope1, $scope2],
+        'feature2' => [$scope1, $scope2],
+    ]);
+
+    expect($result['feature1'][0])->toBe('value1')
+        ->and($result['feature1'][1])->toBe('value1')
+        ->and($result['feature2'][0])->toBe('value2')
+        ->and($result['feature2'][1])->toBe('value2')
+        ->and($scope1->saveCalls)->toBe(1)
+        ->and($scope2->saveCalls)->toBe(1);
+});
+
+it('returns false for undefined features requested via getAll', function () {
+    $flagPal = $this->createMock(FlagPal::class);
+    $flagPal->method('definedFeatures')
+        ->willReturn([
+            ['name' => 'feature1'],
+        ]);
+
+    $flagPal->expects($this->once())
+        ->method('resolveFeatures')
+        ->willReturn(['feature1' => 'value1']);
+
+    $driver = new FlagPalDriver($flagPal);
+
+    $scope = new StatelessFeatures([]);
+
+    $result = $driver->getAll([
+        'feature1' => [$scope],
+        'undefined-feature' => [$scope],
+    ]);
+
+    expect($result['feature1'][0])->toBe('value1')
+        ->and($result['undefined-feature'][0])->toBeFalse();
+});
+
 it('gets feature value for stateless features scope', function () {
     $flagPal = $this->createMock(FlagPal::class);
     $flagPal->method('definedFeatures')
