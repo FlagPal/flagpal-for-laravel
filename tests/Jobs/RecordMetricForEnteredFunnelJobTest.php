@@ -56,8 +56,8 @@ it('records the metric for an entered funnel with feature segmentation', functio
         $funnel->metrics->first(),
         $entry->set,
         100,
-        null,
         $features,
+        null,
     );
 
     $job->handle($flagPal);

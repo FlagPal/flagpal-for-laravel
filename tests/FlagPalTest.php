@@ -353,7 +353,7 @@ it('records a metric', function (bool $hasErrors) {
         ->with($payload)
         ->willReturn($document);
 
-    $success = $flagPal->recordMetric($metric, $set, 100, $date);
+    $success = $flagPal->recordMetric($metric, $set, 100, dateTime: $date);
 
     if ($hasErrors) {
         expect($success)->toBeFalse();
@@ -389,7 +389,7 @@ it('records a metric segmented by feature values', function () {
         ->with($payload)
         ->willReturn($document);
 
-    $success = $flagPal->recordMetric($metric, $set, 100, $date, $features);
+    $success = $flagPal->recordMetric($metric, $set, 100, $features, $date);
 
     expect($success)->toBeTrue();
 });

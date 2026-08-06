@@ -116,7 +116,7 @@ class FlagPal
         return $this->entered;
     }
 
-    public function recordMetric(Metric $metric, FeatureSet $set, int $value, ?DateTimeInterface $dateTime = null, array $features = []): bool
+    public function recordMetric(Metric $metric, FeatureSet $set, int $value, array $features = [], ?DateTimeInterface $dateTime = null): bool
     {
         $item = $this->itemHydrator->hydrate(new MetricTimeSeries, [
             MetricTimeSeries::METRIC => $metric->toJsonApiArray(),
