@@ -8,6 +8,7 @@ use FlagPal\FlagPal\FlagPal;
 use Illuminate\Support\Collection;
 use Laravel\Pennant\Contracts\DefinesFeaturesExternally;
 use Laravel\Pennant\Contracts\Driver;
+use Laravel\Pennant\Feature;
 
 // todo features are cached in Pennant by serialized scope. We need to clear it every time before resolving features (maybe?)
 class FlagPalDriver implements DefinesFeaturesExternally, Driver
@@ -35,13 +36,27 @@ class FlagPalDriver implements DefinesFeaturesExternally, Driver
 
     public function getAll(array $features): array
     {
-        $features = Collection::make($features)
-            ->map(fn ($scopes, $feature) => Collection::make($scopes)
-                ->map(fn ($scope) => $this->get($feature, $scope))
-                ->all())
+        $defined = $this->defined();
+
+        $scopesByKey = [];
+
+        foreach ($features as $scopes) {
+            foreach ($scopes as $scope) {
+                $scopesByKey[Feature::serializeScope($scope)] ??= $scope;
+            }
+        }
+
+        $resolvedByKey = Collection::make($scopesByKey)
+            ->map(fn ($scope) => $this->resolveFeaturesForScope($scope, $defined))
             ->all();
 
-        return $features;
+        return Collection::make($features)
+            ->map(fn ($scopes, $feature) => Collection::make($scopes)
+                ->map(fn ($scope) => in_array($feature, $defined)
+                    ? $resolvedByKey[Feature::serializeScope($scope)][$feature] ?? null
+                    : false)
+                ->all())
+            ->all();
     }
 
     public function get(string $feature, mixed $scope): mixed
@@ -51,6 +66,13 @@ class FlagPalDriver implements DefinesFeaturesExternally, Driver
             return false;
         }
 
+        $features = $this->resolveFeaturesForScope($scope, $defined);
+
+        return $features[$feature] ?? null;
+    }
+
+    private function resolveFeaturesForScope(mixed $scope, array $defined): array
+    {
         $features = [];
 
         if ($scope instanceof StatelessFeatures) {
@@ -70,7 +92,7 @@ class FlagPalDriver implements DefinesFeaturesExternally, Driver
             $scope->saveFlagPalFeatures($features);
         }
 
-        return $features[$feature] ?? null;
+        return $features;
     }
 
     public function set(string $feature, mixed $scope, mixed $value): void
