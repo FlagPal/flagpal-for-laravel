@@ -34,6 +34,35 @@ it('records the metric for an entered funnel', function () {
     $job->handle($flagPal);
 });
 
+it('records the metric for an entered funnel with feature segmentation', function () {
+    $hydrator = $this->app->make(ItemHydrator::class);
+    $funnel = $hydrator->hydrate(new Funnel, [
+        'featureSets' => [
+            [
+                'id' => '5678',
+                FeatureSet::FEATURES => ['test' => 'foo', 'bar' => ['baz']],
+            ],
+        ],
+        'metrics' => [
+            ['id' => '5678', Metric::NAME => 'conversion'],
+        ],
+    ]);
+    $entry = new EnteredFunnel($funnel, $funnel->featureSets->first());
+    $features = ['country' => 'US'];
+    $job = new RecordMetricForEnteredFunnelJob($entry, 'conversion', 100, features: $features);
+
+    $flagPal = $this->createMock(FlagPal::class);
+    $flagPal->expects($this->once())->method('recordMetric')->with(
+        $funnel->metrics->first(),
+        $entry->set,
+        100,
+        $features,
+        null,
+    );
+
+    $job->handle($flagPal);
+});
+
 it('skips recording the metric if it is not tracked in the funnel', function () {
     $hydrator = $this->app->make(ItemHydrator::class);
     $funnel = $hydrator->hydrate(new Funnel, [
