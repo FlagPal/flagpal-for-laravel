@@ -687,7 +687,7 @@ it('memoizes getFunnels per project so asProject switches refetch', function () 
     $flagPal->getFunnels();
 });
 
-it('forgetDefinedFeaturesCache clears memoized defined features', function () {
+it('forgetDefinedFeaturesCache clears memoized defined features and the persistent cache', function () {
     config(['flagpal.cache.driver' => 'array']);
 
     $featureRepository = $this->createMock(FeatureRepository::class);
@@ -706,13 +706,18 @@ it('forgetDefinedFeaturesCache clears memoized defined features', function () {
 
     $flagPal->definedFeatures();
 
-    app(CacheManager::class)->driver()->flush();
+    $cache = app(CacheManager::class)->driver();
+    expect($cache->has('flagpal-features-My Project'))->toBeTrue();
+
+    // no manual cache flush — forgetDefinedFeaturesCache() must purge the persistent cache itself
     $flagPal->forgetDefinedFeaturesCache();
+
+    expect($cache->has('flagpal-features-My Project'))->toBeFalse();
 
     $flagPal->definedFeatures();
 });
 
-it('forgetFunnelsCache clears memoized funnels', function () {
+it('forgetFunnelsCache clears memoized funnels and the persistent cache', function () {
     $funnelRepository = $this->createMock(FunnelRepository::class);
     $featureRepository = $this->createStub(FeatureRepository::class);
 
@@ -732,8 +737,18 @@ it('forgetFunnelsCache clears memoized funnels', function () {
 
     $flagPal->getFunnels();
 
-    app(CacheManager::class)->driver()->flush();
+    $parameters = [
+        'filter' => ['active' => true],
+        'include' => 'featureSets,metrics',
+    ];
+    $cacheKey = 'flagpal-funnels-My Project-'.json_encode($parameters);
+    $cache = app(CacheManager::class)->driver();
+    expect($cache->has($cacheKey))->toBeTrue();
+
+    // no manual cache flush — forgetFunnelsCache() must purge the persistent cache itself
     $flagPal->forgetFunnelsCache();
+
+    expect($cache->has($cacheKey))->toBeFalse();
 
     $flagPal->getFunnels();
 });
@@ -763,13 +778,136 @@ it('forgetDefinedFeaturesCache can target a single project', function () {
     $flagPal->asProject('a')->definedFeatures();
     $flagPal->asProject('b')->definedFeatures();
 
-    app(CacheManager::class)->driver()->flush();
+    $cache = app(CacheManager::class)->driver();
+    expect($cache->has('flagpal-features-a'))->toBeTrue()
+        ->and($cache->has('flagpal-features-b'))->toBeTrue();
+
+    // no manual cache flush — targeted forget must purge only 'a's persistent cache entry
     $flagPal->forgetDefinedFeaturesCache('a');
+
+    expect($cache->has('flagpal-features-a'))->toBeFalse()
+        ->and($cache->has('flagpal-features-b'))->toBeTrue();
 
     // 'b' still memoized — no new repo call
     $flagPal->asProject('b')->definedFeatures();
     // 'a' cleared — repo called again
     $flagPal->asProject('a')->definedFeatures();
+});
+
+it('forgetFunnelsCache can target a single project', function () {
+    config([
+        'flagpal.default_project' => 'a',
+        'flagpal.projects' => [
+            'a' => ['name' => 'a', 'bearer_token' => 'a-token'],
+            'b' => ['name' => 'b', 'bearer_token' => 'b-token'],
+        ],
+    ]);
+
+    $funnelRepository = $this->createMock(FunnelRepository::class);
+    $featureRepository = $this->createStub(FeatureRepository::class);
+
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, [
+        'funnelRepository' => $funnelRepository,
+        'featureRepository' => $featureRepository,
+    ]);
+
+    $document = $this->createStub(DocumentInterface::class);
+    $document->method('getData')->willReturn(new Collection);
+    $featureRepository->method('all')->willReturn((new Document)->setData(new Collection));
+
+    // a warms once, b warms once, a re-fetched after targeted forget = 3 total.
+    $funnelRepository->expects($this->exactly(3))
+        ->method('all')
+        ->willReturn($document);
+
+    $parameters = [
+        'filter' => ['active' => true],
+        'include' => 'featureSets,metrics',
+    ];
+    $suffix = '-'.json_encode($parameters);
+
+    $flagPal->asProject('a')->getFunnels();
+    $flagPal->asProject('b')->getFunnels();
+
+    $cache = app(CacheManager::class)->driver();
+    expect($cache->has('flagpal-funnels-a'.$suffix))->toBeTrue()
+        ->and($cache->has('flagpal-funnels-b'.$suffix))->toBeTrue();
+
+    // no manual cache flush — targeted forget must purge only 'a's persistent cache entry
+    $flagPal->forgetFunnelsCache('a');
+
+    expect($cache->has('flagpal-funnels-a'.$suffix))->toBeFalse()
+        ->and($cache->has('flagpal-funnels-b'.$suffix))->toBeTrue();
+
+    // 'b' still memoized — no new repo call
+    $flagPal->asProject('b')->getFunnels();
+    // 'a' cleared — repo called again
+    $flagPal->asProject('a')->getFunnels();
+});
+
+it('forgetDefinedFeaturesCache(null) purges persistent cache for every configured project', function () {
+    config([
+        'flagpal.default_project' => 'a',
+        'flagpal.projects' => [
+            'a' => ['name' => 'a', 'bearer_token' => 'a-token'],
+            'b' => ['name' => 'b', 'bearer_token' => 'b-token'],
+        ],
+    ]);
+
+    $featureRepository = $this->createStub(FeatureRepository::class);
+
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, ['featureRepository' => $featureRepository]);
+
+    $cache = app(CacheManager::class)->driver();
+    // Simulate a stale persistent entry for 'b' from a prior request — this instance
+    // never called definedFeatures() for 'b', so it's absent from the in-memory map.
+    $cache->set('flagpal-features-b', [['name' => 'stale', 'kind' => 'string']]);
+
+    expect($cache->has('flagpal-features-b'))->toBeTrue();
+
+    $flagPal->forgetDefinedFeaturesCache();
+
+    // global forget loops over all configured projects, not just memoized ones
+    expect($cache->has('flagpal-features-b'))->toBeFalse();
+});
+
+it('forgetFunnelsCache(null) purges persistent cache for every configured project', function () {
+    config([
+        'flagpal.default_project' => 'a',
+        'flagpal.projects' => [
+            'a' => ['name' => 'a', 'bearer_token' => 'a-token'],
+            'b' => ['name' => 'b', 'bearer_token' => 'b-token'],
+        ],
+    ]);
+
+    $funnelRepository = $this->createStub(FunnelRepository::class);
+    $featureRepository = $this->createStub(FeatureRepository::class);
+
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, [
+        'funnelRepository' => $funnelRepository,
+        'featureRepository' => $featureRepository,
+    ]);
+
+    $parameters = [
+        'filter' => ['active' => true],
+        'include' => 'featureSets,metrics',
+    ];
+    $cacheKey = 'flagpal-funnels-b-'.json_encode($parameters);
+
+    $cache = app(CacheManager::class)->driver();
+    // Simulate a stale persistent entry for 'b' from a prior request — this instance
+    // never called getFunnels() for 'b', so it's absent from the in-memory map.
+    $cache->set($cacheKey, new Illuminate\Support\Collection);
+
+    expect($cache->has($cacheKey))->toBeTrue();
+
+    $flagPal->forgetFunnelsCache();
+
+    // global forget loops over all configured projects, not just memoized ones
+    expect($cache->has($cacheKey))->toBeFalse();
 });
 
 it('filters invalid features by their own rules', function () {
