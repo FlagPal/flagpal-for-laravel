@@ -36,7 +36,11 @@ class FlagPal
 
     private int $cacheTtlSeconds;
 
-    private ?Collection $funnels = null;
+    /** @var array<string, Collection> */
+    private array $funnels = [];
+
+    /** @var array<string, array> */
+    private array $definedFeatures = [];
 
     public function __construct(
         protected readonly FunnelRepository $funnelRepository,
@@ -56,7 +60,12 @@ class FlagPal
 
     public function definedFeatures(): array
     {
-        $cacheKey = "flagpal-features-{$this->project}";
+        return $this->definedFeatures[$this->project] ??= $this->loadDefinedFeatures();
+    }
+
+    protected function loadDefinedFeatures(): array
+    {
+        $cacheKey = $this->definedFeaturesCacheKey($this->project);
 
         if (($features = $this->cache()->get($cacheKey))) {
             return $features;
@@ -166,16 +175,63 @@ class FlagPal
 
     public function getFunnels(): Collection
     {
-        return $this->funnels ?? ($this->funnels = $this->loadFunnels());
+        return $this->funnels[$this->project] ??= $this->loadFunnels();
+    }
+
+    public function forgetDefinedFeaturesCache(?string $project = null): void
+    {
+        if ($project === null) {
+            foreach (array_keys($this->projects) as $projectName) {
+                $this->cache()->delete($this->definedFeaturesCacheKey($projectName));
+            }
+
+            $this->definedFeatures = [];
+
+            return;
+        }
+
+        unset($this->definedFeatures[$project]);
+        $this->cache()->delete($this->definedFeaturesCacheKey($project));
+    }
+
+    public function forgetFunnelsCache(?string $project = null): void
+    {
+        if ($project === null) {
+            foreach (array_keys($this->projects) as $projectName) {
+                $this->cache()->delete($this->funnelsCacheKey($projectName));
+            }
+
+            $this->funnels = [];
+
+            return;
+        }
+
+        unset($this->funnels[$project]);
+        $this->cache()->delete($this->funnelsCacheKey($project));
+    }
+
+    private function definedFeaturesCacheKey(string $project): string
+    {
+        return "flagpal-features-{$project}";
+    }
+
+    private function funnelsCacheParameters(): array
+    {
+        return [
+            'filter' => ['active' => true],
+            'include' => 'featureSets,metrics',
+        ];
+    }
+
+    private function funnelsCacheKey(string $project): string
+    {
+        return "flagpal-funnels-{$project}-".json_encode($this->funnelsCacheParameters());
     }
 
     protected function loadFunnels(): Collection
     {
-        $parameters = [
-            'filter' => ['active' => true],
-            'include' => 'featureSets,metrics',
-        ];
-        $cacheKey = "flagpal-funnels-{$this->project}-".json_encode($parameters);
+        $parameters = $this->funnelsCacheParameters();
+        $cacheKey = $this->funnelsCacheKey($this->project);
 
         if (($funnels = $this->cache()->get($cacheKey))) {
             return $funnels;
