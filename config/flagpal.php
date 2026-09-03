@@ -81,4 +81,21 @@ return [
     'log' => [
         'driver' => 'default',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Guest scope options
+    |--------------------------------------------------------------------------
+    |
+    | These options configure the cookie used by
+    | `FlagPal\FlagPal\Pennant\GuestScope` to keep track of feature values
+    | for visitors who aren't authenticated yet.
+    |
+    | The ttl is in minutes.
+    |
+    */
+    'guest' => [
+        'cookie' => 'flagpal_guest',
+        'ttl' => 60 * 24 * 30,
+    ],
 ];
