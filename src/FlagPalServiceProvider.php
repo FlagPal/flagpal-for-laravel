@@ -47,6 +47,8 @@ class FlagPalServiceProvider extends PackageServiceProvider
         $this->registerSharedTypeMapper();
         $this->registerParsers();
         $this->registerClients();
+
+        $this->app->scoped(FlagPal::class);
     }
 
     protected function registerSharedTypeMapper()
@@ -85,6 +87,21 @@ class FlagPalServiceProvider extends PackageServiceProvider
         });
     }
 
+    /**
+     * Register a `flagpal` Pennant store out of the box, so apps don't have
+     * to hand-edit config/pennant.php just to use the default project.
+     * An app that has already defined its own `flagpal` store (e.g. to use
+     * a non-default project, or multiple projects) keeps full control.
+     */
+    protected function registerPennantStore(): void
+    {
+        if ($this->app['config']->get('pennant.stores.flagpal') === null) {
+            $this->app['config']->set('pennant.stores.flagpal', [
+                'driver' => FlagPalDriver::NAME,
+            ]);
+        }
+    }
+
     public function packageBooted()
     {
         $mapper = $this->app->make(TypeMapperInterface::class);
@@ -94,6 +111,7 @@ class FlagPalServiceProvider extends PackageServiceProvider
             $mapper->setMapping($class::TYPE, $class);
         }
 
+        $this->registerPennantStore();
         $this->registerPennantDriver();
     }
 }

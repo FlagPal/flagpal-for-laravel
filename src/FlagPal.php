@@ -5,6 +5,7 @@ namespace FlagPal\FlagPal;
 use Carbon\CarbonInterval;
 use DateTimeInterface;
 use FlagPal\FlagPal\Actions\ResolveFeaturesFromFunnel;
+use FlagPal\FlagPal\Exceptions\InvalidConfigurationException;
 use FlagPal\FlagPal\Repositories\ActorRepository;
 use FlagPal\FlagPal\Repositories\FeatureRepository;
 use FlagPal\FlagPal\Repositories\FunnelRepository;
@@ -56,6 +57,8 @@ class FlagPal
         $this->projects = config('flagpal.projects');
         $this->project = config('flagpal.default_project');
         $this->cacheTtlSeconds = (int) config('flagpal.cache.ttl', 60);
+
+        $this->assertProjectIsKnown($this->project);
     }
 
     public function definedFeatures(): array
@@ -258,9 +261,18 @@ class FlagPal
 
     public function asProject(string $project): self
     {
+        $this->assertProjectIsKnown($project);
+
         $this->project = $project;
 
         return $this;
+    }
+
+    private function assertProjectIsKnown(string $project): void
+    {
+        if (! array_key_exists($project, $this->projects)) {
+            throw InvalidConfigurationException::unknownProject($project, array_keys($this->projects));
+        }
     }
 
     public function getProject(): string

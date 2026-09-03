@@ -1,5 +1,8 @@
 <?php
 
+use FlagPal\FlagPal\Exceptions\InvalidConfigurationException;
+use FlagPal\FlagPal\FlagPal;
+use FlagPal\FlagPal\FlagPalServiceProvider;
 use FlagPal\FlagPal\Pennant\FlagPalDriver;
 use FlagPal\FlagPal\Resources\Feature;
 use FlagPal\FlagPal\Resources\FeatureSet;
@@ -51,7 +54,7 @@ it('registers the pennant driver', function () {
 
             'bar' => [
                 'driver' => 'flagpal',
-                'project' => 'Bar',
+                'project' => 'bar',
             ],
         ],
     ]);
@@ -61,5 +64,39 @@ it('registers the pennant driver', function () {
     expect($driver->flagPal->getProject())->toBe('foo');
 
     $driver = Laravel\Pennant\Feature::store('bar')->getDriver();
-    expect($driver->flagPal->getProject())->toBe('Bar');
+    expect($driver->flagPal->getProject())->toBe('bar');
+});
+
+it('throws a clear exception when switching to an unknown project', function () {
+    config([
+        'flagpal.projects' => [
+            'foo' => [],
+        ],
+        'flagpal.default_project' => 'foo',
+    ]);
+
+    /** @var FlagPal $flagPal */
+    $flagPal = app(FlagPal::class);
+
+    $flagPal->asProject('does-not-exist');
+})->throws(InvalidConfigurationException::class, 'FlagPal project "does-not-exist" is not defined');
+
+it('registers a default flagpal Pennant store when the app has not defined one', function () {
+    config(['pennant.stores' => []]);
+
+    (new FlagPalServiceProvider(app()))->packageBooted();
+
+    expect(config('pennant.stores.flagpal'))->toBe(['driver' => FlagPalDriver::NAME]);
+});
+
+it('does not override an app-defined flagpal Pennant store', function () {
+    config(['pennant.stores.flagpal' => ['driver' => 'flagpal', 'project' => 'foo']]);
+
+    (new FlagPalServiceProvider(app()))->packageBooted();
+
+    expect(config('pennant.stores.flagpal'))->toBe(['driver' => 'flagpal', 'project' => 'foo']);
+});
+
+it('resolves FlagPal as a scoped/shared instance within a request', function () {
+    expect(app(FlagPal::class))->toBe(app(FlagPal::class));
 });

@@ -125,6 +125,14 @@ if (in_array('new-api', $features)) {
 }
 ```
 
+A `FlagPal` facade is also available as a shorthand for `app(FlagPal::class)`:
+
+```php
+use FlagPal\FlagPal\Facades\FlagPal;
+
+$features = FlagPal::resolveFeatures();
+```
+
 ### Rich Feature Values
 
 You can define your features not only in binary states (active/inactive), but store rich values as well.
@@ -364,12 +372,15 @@ This package includes a custom driver for [Laravel Pennant](https://github.com/l
 
 ### Configuration
 
-To use the FlagPal driver with Laravel Pennant, update your `config/pennant.php` file:
+A `flagpal` Pennant store, backed by your `default_project`, is registered automatically - there's nothing to add to `config/pennant.php` to use Pennant with your default project.
+
+If you'd like to use a non-default project, or configure multiple FlagPal projects as separate stores, define `flagpal` (or any other store name) yourself in `config/pennant.php` and the package will leave it untouched:
 
 ```php
 'stores' => [
     'flagpal' => [
         'driver' => 'flagpal',
+        'project' => 'My Other Project',
     ],
 ],
 ```
