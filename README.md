@@ -441,6 +441,21 @@ $user->features()->set(['some-feature' => 'you-have-by-default']);
 $user->features()->all(); // ['some-feature' => 'you-have-by-default', 'some-other-feature' => 'resolved-from-flagpal']
 ```
 
+#### Guests / anonymous visitors
+
+The storage-based approaches above assume you have a model to scope features to (like an authenticated `User`). For visitors who aren't authenticated yet, the package ships a ready-made cookie-backed scope: `FlagPal\FlagPal\Pennant\GuestScope`.
+
+Wire it up alongside your regular scope resolution, falling back to it for unauthenticated requests:
+
+```php
+// AppServiceProvider::boot()
+Laravel\Pennant\Feature::resolveScopeUsing(
+    fn () => Illuminate\Support\Facades\Auth::user() ?? new \FlagPal\FlagPal\Pennant\GuestScope(request())
+);
+```
+
+Feature values resolved for a guest are stored in a cookie (`flagpal.guest.cookie` in the config, `flagpal_guest` by default) for the configured TTL (`flagpal.guest.ttl`, 30 days by default), so a returning visitor keeps the same feature values without an account.
+
 #### Using FlagPal as a remote data warehouse
 In this scenario, you can avoid storing any data on your own, and trust FlagPal to do it for you. In this case, you can instead use the trait `FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeatures`.
 It calls the FlagPal API to save and retrieve features for your scope. Each scope must send a reference/identifier for itself, so that you can track which features belong to which scopes. 
