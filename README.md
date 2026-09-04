@@ -277,6 +277,8 @@ $flagPal = app(FlagPal::class);
 $features = $flagPal->asProject('project_b')->resolveFeatures();
 ```
 
+`asProject()` always returns the same stable instance for a given project within a request, no matter where or how many times it's called — including from unrelated services that know nothing about each other — so switching projects in one place can never affect another.
+
 [//]: # TODO()
 ### Recording Metrics
 
@@ -352,7 +354,7 @@ If you want to track how many people were exposed to each variant of an Experime
 })
 ```
 
-Once registered, it records the `flagpal.entry_metric` metric (`experiment:entered` by default) for every **Experiment** funnel a scope was resolved into during the request — once per request, after the response has already been sent, so it doesn't add latency. Experience funnels are never recorded, since they only ever have one variant.
+Once registered, it records the `flagpal.entry_metric` metric (`experiment:entered` by default) for every **Experiment** funnel a scope was resolved into during the request — across every FlagPal project touched, whether via Pennant or `FlagPal::asProject()` directly — once per request, after the response has already been sent, so it doesn't add latency. Experience funnels are never recorded, since they only ever have one variant.
 
 This requires a metric with that same name to exist on your Experiments in the FlagPal dashboard; funnels that don't have it are silently skipped.
 

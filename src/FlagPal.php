@@ -37,11 +37,9 @@ class FlagPal
 
     private int $cacheTtlSeconds;
 
-    /** @var array<string, Collection> */
-    private array $funnels = [];
+    private ?Collection $funnels = null;
 
-    /** @var array<string, array> */
-    private array $definedFeatures = [];
+    private ?array $definedFeatures = null;
 
     public function __construct(
         protected readonly FunnelRepository $funnelRepository,
@@ -53,17 +51,20 @@ class FlagPal
         protected readonly ItemHydrator $itemHydrator,
         protected readonly CacheManager $cache,
         protected LogManager $log,
+        protected readonly FlagPalProjectRegistry $registry,
     ) {
         $this->projects = config('flagpal.projects');
         $this->project = config('flagpal.default_project');
         $this->cacheTtlSeconds = (int) config('flagpal.cache.ttl', 60);
 
         $this->assertProjectIsKnown($this->project);
+
+        $this->registry->remember($this->project, fn () => $this);
     }
 
     public function definedFeatures(): array
     {
-        return $this->definedFeatures[$this->project] ??= $this->loadDefinedFeatures();
+        return $this->definedFeatures ??= $this->loadDefinedFeatures();
     }
 
     protected function loadDefinedFeatures(): array
@@ -178,7 +179,7 @@ class FlagPal
 
     public function getFunnels(): Collection
     {
-        return $this->funnels[$this->project] ??= $this->loadFunnels();
+        return $this->funnels ??= $this->loadFunnels();
     }
 
     public function forgetDefinedFeaturesCache(?string $project = null): void
@@ -188,13 +189,18 @@ class FlagPal
                 $this->cache()->delete($this->definedFeaturesCacheKey($projectName));
             }
 
-            $this->definedFeatures = [];
+            foreach ($this->registry->all() as $instance) {
+                $instance->definedFeatures = null;
+            }
 
             return;
         }
 
-        unset($this->definedFeatures[$project]);
         $this->cache()->delete($this->definedFeaturesCacheKey($project));
+
+        if ($instance = $this->registry->find($project)) {
+            $instance->definedFeatures = null;
+        }
     }
 
     public function forgetFunnelsCache(?string $project = null): void
@@ -204,13 +210,18 @@ class FlagPal
                 $this->cache()->delete($this->funnelsCacheKey($projectName));
             }
 
-            $this->funnels = [];
+            foreach ($this->registry->all() as $instance) {
+                $instance->funnels = null;
+            }
 
             return;
         }
 
-        unset($this->funnels[$project]);
         $this->cache()->delete($this->funnelsCacheKey($project));
+
+        if ($instance = $this->registry->find($project)) {
+            $instance->funnels = null;
+        }
     }
 
     private function definedFeaturesCacheKey(string $project): string
@@ -259,13 +270,33 @@ class FlagPal
         return $funnels;
     }
 
+    /**
+     * Returns the stable instance representing the given project for the
+     * rest of this request — never mutates $this. Calling this repeatedly
+     * for the same project, from anywhere (Pennant or your own code),
+     * always returns the same object, so switching projects can never
+     * corrupt a reference someone else is holding onto.
+     */
     public function asProject(string $project): self
     {
+        if ($project === $this->project) {
+            return $this;
+        }
+
         $this->assertProjectIsKnown($project);
 
-        $this->project = $project;
+        return $this->registry->remember($project, fn () => $this->forProject($project));
+    }
 
-        return $this;
+    private function forProject(string $project): self
+    {
+        $instance = clone $this;
+        $instance->project = $project;
+        $instance->funnels = null;
+        $instance->definedFeatures = null;
+        $instance->entered = [];
+
+        return $instance;
     }
 
     private function assertProjectIsKnown(string $project): void
