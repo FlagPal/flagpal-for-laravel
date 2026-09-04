@@ -341,6 +341,23 @@ $user->features = array_merge($currentFeatures, ['entered-funnels' => array_keys
 $flagPal->resolveFeatures($user->features);
 ```
 
+### Recording Experiment Entries Automatically
+
+If you want to track how many people were exposed to each variant of an Experiment (as opposed to recording custom business metrics yourself, as shown above), register the `FlagPal\FlagPal\Http\Middleware\RecordEnteredExperiments` middleware:
+
+```php
+// bootstrap/app.php
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->append(\FlagPal\FlagPal\Http\Middleware\RecordEnteredExperiments::class);
+})
+```
+
+Once registered, it records the `flagpal.entry_metric` metric (`experiment:entered` by default) for every **Experiment** funnel a scope was resolved into during the request — once per request, after the response has already been sent, so it doesn't add latency. Experience funnels are never recorded, since they only ever have one variant.
+
+This requires a metric with that same name to exist on your Experiments in the FlagPal dashboard; funnels that don't have it are silently skipped.
+
+To disable entry tracking without removing the middleware, set `'entry_metric' => null` in `config/flagpal.php`.
+
 ## Advanced Usage
 
 ### Custom Cache Configuration

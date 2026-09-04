@@ -98,4 +98,20 @@ return [
         'cookie' => 'flagpal_guest',
         'ttl' => 60 * 24 * 30,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Entry metric
+    |--------------------------------------------------------------------------
+    |
+    | The name of the metric recorded, once per request, for every
+    | Experiment funnel a scope was resolved into. Used by the
+    | `FlagPal\FlagPal\Http\Middleware\RecordEnteredExperiments`
+    | middleware, which apps opt into registering themselves.
+    |
+    | Set this to null to disable entry metric recording, even if the
+    | middleware is registered.
+    |
+    */
+    'entry_metric' => 'experiment:entered',
 ];
