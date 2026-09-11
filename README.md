@@ -5,345 +5,147 @@
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/flagpal/flagpal-for-laravel/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/flagpal/flagpal-for-laravel/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/flagpal/flagpal-for-laravel.svg?style=flat-square)](https://packagist.org/packages/flagpal/flagpal-for-laravel)
 
-FlagPal is a Laravel package for resolving feature flags provided via flagpal.com API. It allows you to incrementally roll out new features, perform A/B testing, and manage feature access across your application with ease.
+**FlagPal for Laravel is the missing batteries for [Laravel Pennant](https://laravel.com/docs/pennant).** Pennant gives Laravel a clean feature-flag API, but ships with nowhere to manage flags, target users, run experiments, or read results - you'd have to build all of that yourself. This package plugs [FlagPal](https://flagpal.com) in as a Pennant driver, so `Feature::active(...)` is instantly backed by a real dashboard: percentage rollouts, targeting rules, multi-variant A/B tests, and conversion tracking, with no extra infrastructure and (for the common case) zero extra configuration.
 
-## Features
+🏠 [flagpal.com](https://flagpal.com) - the product · 📖 [docs.flagpal.com](https://docs.flagpal.com) - full documentation, concepts, and dashboard guides
 
-- Resolve feature flags from a remote API
-- Support for multiple projects with different configurations
-- Local resolution and built-in caching for improved performance
-- Metric recording for feature usage
-- Actor management for user-specific features
-- Comprehensive logging
+If you just want to see it work: jump to [Quick Start](#quick-start) or [Your First A/B Test](#your-first-ab-test).
 
-## Installation
+## Table of Contents
 
-You can install the package via composer:
+- [What is FlagPal?](#what-is-flagpal)
+- [Why this package?](#why-this-package)
+- [Requirements](#requirements)
+- [Quick Start](#quick-start)
+- [Your First A/B Test](#your-first-ab-test)
+- [Reading Results](#reading-results)
+- [Core Concepts](#core-concepts)
+- [Multiple FlagPal Projects](#multiple-flagpal-projects)
+- [Guests / Anonymous Visitors](#guests--anonymous-visitors)
+- [Advanced Usage](#advanced-usage)
+- [Using FlagPal Without Pennant](#using-flagpal-without-pennant)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [Changelog](#changelog)
+- [Security Vulnerabilities](#security-vulnerabilities)
+- [Credits](#credits)
+- [License](#license)
 
-```bash
-composer require flagpal/flagpal-for-laravel
-```
+## What is FlagPal?
 
-You can publish the config file with:
+[FlagPal](https://flagpal.com) is a feature management and experimentation platform: a dashboard where your team defines feature flags, controls who sees what, and measures whether changes actually work - without a developer needing to deploy code for every rollout decision.
 
-```bash
-php artisan vendor:publish --tag="flagpal-for-laravel-config"
-```
+Four concepts, in one sentence each (full explanations in the [docs](https://docs.flagpal.com/getting-started/what-is-flagpal)):
 
-## Configuration
+| Concept | What it is |
+|---|---|
+| **Feature Flag** | A named, typed value - a light switch, a string, a number - that your app reads at runtime. |
+| **Experience** | Delivers one fixed set of flag values to a targeted group of users (e.g. "beta users get `new_checkout_flow = true`"). |
+| **Experiment** | An A/B (or A/B/n) test - splits traffic across multiple variants, each setting flags differently, so you can measure which one wins. |
+| **Metric** | Something you measure against an Experiment - conversions, revenue, clicks - to decide the winner. |
 
-After publishing the configuration file, you'll find it at `config/flagpal.php`. Here you can configure:
+You don't need to understand FlagPal's dashboard deeply to use this package - the [Quick Start](#quick-start) below gets you checking a flag in minutes, and the [A/B test walkthrough](#your-first-ab-test) explains the rest as you go.
 
-### API Connection
+## Why this package?
 
-```php
-// Base URL for the FlagPal API
-'base_url' => env('FLAGPAL_URL'),
+With Laravel Pennant's built-in drivers, your feature flag resolution rules live in your codebase itself - every flag is a PHP closure you write, maintain, and ship. That design has two real costs. First, rules can't change without a deployment: every rollout tweak, targeting adjustment, or experiment change has to go through code review and release, which restricts how quickly your team can deliver experiments and experiences. Second, Pennant leaves developers to whip up their own feature activation rule logic - percentage rollouts, targeting rules, multi-variant experiments, result tracking - making the learning curve steeper and scaling feature management across a team more difficult.
 
-// Default project to use
-'default_project' => env('FLAGPAL_PROJECT'),
-```
+This package is a Pennant driver backed by FlagPal, so:
 
-### Projects Configuration
+- `Feature::active('new-api')` and friends work exactly as Pennant already teaches you, no new API to learn for the common case.
+- Flags, rollout percentages, targeting rules, and experiment variants are managed in the FlagPal dashboard - no redeploying your app to change who sees what.
+- A/B tests are a first-class concept (Experiments), with conversion metrics and statistical results, not something you bolt on yourself.
+- Registering the driver, caching resolved flags, and (optionally) tracking who was exposed to which variant are handled for you.
 
-```php
-'projects' => [
-    'My Project' => [
-        'name' => 'My Project',
-        'bearer_token' => env('FLAGPAL_MY_PROJECT_TOKEN'),
-    ],
-    // Add more projects as needed
-],
-```
+If you'd rather not use Pennant at all, the SDK works completely standalone too - see [Using FlagPal Without Pennant](#using-flagpal-without-pennant).
 
-### Caching Options
+## Requirements
 
-```php
-'cache' => [
-    'driver' => 'default', // Use any cache driver from your cache.php config
-    'ttl' => 60, // Cache TTL in seconds
-],
-```
+- PHP 8.2+
+- Laravel 11 or 12
+- A [FlagPal](https://flagpal.com) account and project ([create one free](https://flagpal.com))
 
-### Logging Options
+## Quick Start
 
-```php
-'log' => [
-    'driver' => 'default', // Use any log driver from your logging.php config
-],
-```
+1. Install the package:
 
-## Usage
+   ```bash
+   composer require flagpal/flagpal-for-laravel
+   ```
 
-FlagPal is designed in a way to adapt to your application needs. You can use as many or as little features as you'd like.
-At the core, it consists of three basic concepts:
-- Feature flags. They're the building blocks of your logic. For example, a feature flag called `new-api`.
-- Experiments and Experiences (also known as Funnels). They target your currently provided feature flags and resolve new ones, by the rules defined in the FlagPal dashboard. The only difference between an Experiment or an Experience is that Experiments can have multiple variants, but an Experience only has one.
-- Metrics. You may define the metrics you'd like to track for a specific Experiment to make business decisions. A Metric, for example, can be a `conversion`, `revenue`, `interaction`, or anything else. Be as abstract or specific as you need to be. 
+2. Publish the config file:
 
-With this concept in mind, you can start resolving your features by chaining Experiments or Experiences one after another, and passing your features every time.
+   ```bash
+   php artisan vendor:publish --tag="flagpal-for-laravel-config"
+   ```
 
-#### Pennant
-As this is a Laravel package, it comes with a Laravel Pennant driver. FlagPal works completely with or without the driver. Examples will include usage for both cases.
-Keep in mind that FlagPal's goal is to give you **options**, while Pennant is rather opinionated. All of Pennant's and FlagPal's features coexist and may simply need a bit more verbose configuration.
-Since there is a lot of Laravel "magic" going behind the hood, please see this section on how to configure the Laravel Pennant driver.
+3. Grab your project's API URL and token from the FlagPal dashboard ([creating a project](https://docs.flagpal.com/getting-started/project-setup), [managing API tokens](https://docs.flagpal.com/guides/managing-api-tokens)) and add them to `.env`:
 
-### Basic Feature Resolution
+   ```env
+   FLAGPAL_URL=https://flagpal.com/api/v1
+   FLAGPAL_PROJECT="My Project"
+   FLAGPAL_MY_PROJECT_TOKEN=your-token-here
+   ```
 
-#### With Pennant
+   `FLAGPAL_MY_PROJECT_TOKEN` matches the project name from `config/flagpal.php` - see that file after publishing for the exact mapping if you rename it.
 
-```php
-use Laravel\Pennant\Feature;
+4. Tell Pennant to use FlagPal as its default store, also in `.env`:
 
-// Assuming you have the driver set up as default in config/pennant.php
-// Check if a specific feature is active. You define these features in FlagPal's dashboard
-if (Feature::active('new-api')) {
-    // Use the new API
-} else {
-    // Use the legacy API
-}
+   ```env
+   PENNANT_STORE=flagpal
+   ```
 
-// If the driver isn't default, you should call it every time: Feature::store('flagpal')->active('new-api')
-```
+   Without this, Pennant keeps resolving flags through its default `database` store, and `Feature::active(...)` would never reach FlagPal.
 
-
-#### Without Pennant
-```php
-use FlagPal\FlagPal\FlagPal;
-
-// Create a FlagPal instance or use dependency injection
-$flagPal = app(FlagPal::class);
-
-// Resolve features (returns an array of active features)
-$features = $flagPal->resolveFeatures();
-
-// Check if a specific feature is active. You define these features in FlagPal's dashboard
-if (in_array('new-api', $features)) {
-    // Use the new API
-} else {
-    // Use the legacy API
-}
-```
-
-A `FlagPal` facade is also available as a shorthand for `app(FlagPal::class)`:
-
-```php
-use FlagPal\FlagPal\Facades\FlagPal;
-
-$features = FlagPal::resolveFeatures();
-```
-
-### Rich Feature Values
-
-You can define your features not only in binary states (active/inactive), but store rich values as well.
-There are multiple value types available, that should cover most of your needs: boolean, string, integer, array, date
-
-#### With Pennant
+That's it - nothing to add to `config/pennant.php`. The `flagpal` Pennant store itself, backed by your default project, is registered automatically. Check a flag anywhere in your app:
 
 ```php
 use Laravel\Pennant\Feature;
 
-// Check a value of a specific feature
-if (Feature::value('checkout-flow') === 'multi-step') {
-    // Render a multi-step checkout flow
-} else {
-    // Render the checkout within a single page
+if (Feature::active('new-checkout')) {
+    // show the new checkout
 }
 ```
 
-#### Without Pennant
-```php
-use FlagPal\FlagPal\FlagPal;
+`new-checkout` is a flag you define in the FlagPal dashboard - the SDK resolves whatever's configured there.
 
-// Create a FlagPal instance or use dependency injection
-$flagPal = app(FlagPal::class);
+## Your First A/B Test
 
-// Resolve features (returns an array of active features)
-$features = $flagPal->resolveFeatures();
+This walks through a complete, realistic example: **testing whether a green "Complete Purchase" button converts better than the current blue one.**
 
-// Check a value of a specific feature
-if ($features['checkout-flow'] === 'multi-step') {
-    // Render a multi-step checkout flow
-} else {
-    // Render the checkout within a single page
-}
+### 1. Create a feature flag
+
+In the FlagPal dashboard, create a flag called `checkout-button-color` (type: string). This is the value your code will read - you're not hardcoding "blue" or "green" anywhere. ([guide →](https://docs.flagpal.com/guides/creating-feature-flag))
+
+### 2. Create an Experiment with two variants
+
+Create an **Experiment** (not an Experience - Experiments are what support multiple variants and statistical results). Give it two variants, each setting `checkout-button-color` to a different value, split 50/50:
+
+- **Control** - `checkout-button-color = "blue"`
+- **Variant** - `checkout-button-color = "green"`
+
+([guide →](https://docs.flagpal.com/guides/running-experiment))
+
+### 3. Attach a metric
+
+Attach a metric to the Experiment - call it `conversion` - so FlagPal knows what "winning" means. ([guide →](https://docs.flagpal.com/guides/tracking-metrics))
+
+### 4. Read the flag in your app
+
+No dashboard concept changes your code - you always just read a flag:
+
+```blade
+{{-- resources/views/checkout.blade.php --}}
+<button style="background-color: {{ \Laravel\Pennant\Feature::value('checkout-button-color') }}">
+    Complete Purchase
+</button>
 ```
 
-### Resolving with pre-existing features
+Every visitor lands in Control or Variant according to the traffic split you configured, and `Feature::value(...)` returns the right color for them - automatically, consistently for that visitor, with no extra code.
 
-#### With Pennant
+### 5. Track who saw each variant
 
-```php
-use Laravel\Pennant\Feature;
-
-// Flags and values can be anything defined in your application
-// and have the same names defined in FlagPal's dashboard
-
-// These feature values can be retrieved from anywhere: your the database (like your User model), cache, other Pennant drivers. It's up to you
-$currentFeatures = [
-    'dark-mode' => true,
-    'checkout-flow' => 'single-page',
-    'trial-days-remaining' => 14,
-];
-
-$currentFeatures = new \FlagPal\FlagPal\Pennant\StatelessFeatures($currentFeatures);
-
-// Check if a specific feature is active
-if (Feature::for($currentFeatures)->active('show-trial-reminder')) {
-    // Trigger some promotional message
-}
-```
-
-#### Without Pennant
-
-```php
-use FlagPal\FlagPal\FlagPal;
-
-// Create a FlagPal instance or use dependency injection
-$flagPal = app(FlagPal::class);
-
-// Flags and values can be anything defined in your application
-// and have the same names defined in FlagPal's dashboard
-
-// These feature values can be retrieved from anywhere: your the database (like your User model), cache, other Pennant drivers. It's up to you
-$currentFeatures = [
-    'dark-mode' => true,
-    'checkout-flow' => 'single-page',
-    'trial-days-remaining' => 14,
-];
-
-$features = $flagPal->resolveFeatures($currentFeatures);
-
-// Check if a specific feature is active
-if (in_array('show-trial-reminder', $features)) {
-    // Trigger some promotional message
-}
-```
-
-### Working with Multiple FlagPal Projects
-First, make sure you have your project configured in `config/flagpal.php`
-
-#### With Pennant
-To use multiple projects with Laravel Pennant, it's best to [register them as separate drivers](https://laravel.com/docs/master/pennant#registering-the-driver).
-You can skip registering them in your application's service provider, as this is already done by `FlagPalServiceProvider`. 
-You only need to define your projects in `config/pennant.php` 
-
-```php
-<?php
-
-// config/pennant.php
-
-return [
-    'stores' => [
-
-        // one of the default drivers from pennant
-        'array' => [
-            'driver' => 'array',
-        ],
-
-        // one of the default drivers from pennant
-        'database' => [
-            'driver' => 'database',
-            'connection' => null,
-            'table' => 'features',
-        ],
-        
-        // your first flagpal project driver
-        'flagpal' => [
-            'driver' => 'flagpal',
-            'project' => null // if not set, uses the default project from flagpal.php config
-        ],
-        // your second flagpal project driver
-        'flagpal_project_b' => [
-            'driver' => 'flagpal',
-            'project' => 'project_b',
-        ],
-    ],
-];
-
-// Usage
-Feature::driver('flagpal_project_b')->all();
-```
-
-#### Without Pennant
-
-```php
-use FlagPal\FlagPal\FlagPal;
-
-// Create a FlagPal instance or use dependency injection
-$flagPal = app(FlagPal::class);
-
-// Switch to a specific project
-$features = $flagPal->asProject('project_b')->resolveFeatures();
-```
-
-[//]: # TODO()
-### Recording Metrics
-
-```php
-use FlagPal\FlagPal\FlagPal;
-use FlagPal\FlagPal\Resources\Metric;
-use FlagPal\FlagPal\Resources\FeatureSet;
-
-// Create a metric and feature set
-$metric = new Metric(['name' => 'conversion']);
-$featureSet = new FeatureSet(['id' => 'checkout-v2']);
-
-// Record a metric with a value
-app(FlagPal::class)->recordMetric($metric, $featureSet, 1);
-
-// Optionally segment the metric by feature values (only features enabled for
-// segmentation on the metric are recorded; the value is always recorded)
-app(FlagPal::class)->recordMetric($metric, $featureSet, 1, features: ['country' => 'US']);
-```
-
-### Managing Actors (optional)
-
-FlagPal can be used as a stateless feature resolver but also works as a data warehouse for your needs.
-You can store and retrieve data for "Actors", which is an abstract name for your any entity in your application: a user, a team, a project, etc. 
-
-```php
-use FlagPal\FlagPal\FlagPal;
-
-// Create a FlagPal instance or use dependency injection
-$flagPal = app(FlagPal::class);
-
-// Get an actor by reference
-$actor = $flagPal->getActor('user-123');
-$actor->features; // ['new-api' => true, 'dark-mode' => false, 'checkout-flow' => 'multi-step'];
-
-// Save actor features
-$actor = $flagPal->saveActorFeatures('user-123', ['premium-access' => true]);
-```
-
-### Accessing Entered Funnels
-
-After every feature resolution, each funnel is stored in-memory for easy access.
-You can store this for analytics, debugging, and so on.
-
-```php
-use FlagPal\FlagPal\FlagPal;
-
-// Create a FlagPal instance or use dependency injection
-$flagPal = app(FlagPal::class);
-
-// After resolving features, get the funnels that were entered
-$enteredFunnels = $flagPal->getEnteredFunnels();
-
-// To take it up a notch, you can even save them into a single feature, to ensure the
-// same customer doesn't re-enter the same funnel (an A/B test for example)
-$user = User::find(1);
-$currentFeatures = $user->features;
-$user->features = array_merge($currentFeatures, ['entered-funnels' => array_keys($enteredFunnels)]);
-
-// Make sure your Experiments and Experiences actually target a feature flag called "entered-funnels".
-// This is just an example. You define your own settings in FlagPal.
-$flagPal->resolveFeatures($user->features);
-```
-
-### Recording Experiment Entries Automatically
-
-If you want to track how many people were exposed to each variant of an Experiment (as opposed to recording custom business metrics yourself, as shown above), register the `FlagPal\FlagPal\Http\Middleware\RecordEnteredExperiments` middleware:
+FlagPal needs to know how many people saw each variant to calculate a winner, not just how many converted. Register the entry-tracking middleware once, and it handles this automatically, after the response is already sent (no added latency):
 
 ```php
 // bootstrap/app.php
@@ -352,117 +154,93 @@ If you want to track how many people were exposed to each variant of an Experime
 })
 ```
 
-Once registered, it records the `flagpal.entry_metric` metric (`experiment:entered` by default) for every **Experiment** funnel a scope was resolved into during the request — once per request, after the response has already been sent, so it doesn't add latency. Experience funnels are never recorded, since they only ever have one variant.
+That's the entire setup for exposure tracking - no code at each flag check.
 
-This requires a metric with that same name to exist on your Experiments in the FlagPal dashboard; funnels that don't have it are silently skipped.
+### 6. Record the conversion
 
-To disable entry tracking without removing the middleware, set `'entry_metric' => null` in `config/flagpal.php`.
-
-## Advanced Usage
-
-### Custom Cache Configuration
-
-The package uses Laravel's cache system. You can configure a specific cache driver for FlagPal:
+When the purchase completes - in the same request the checkout page was rendered in - record the metric against the variant the visitor actually saw:
 
 ```php
-// In config/flagpal.php
-'cache' => [
-    'driver' => 'redis',
-    'ttl' => 300, // 5 minutes
-],
+use FlagPal\FlagPal\FlagPal;
+use FlagPal\FlagPal\Resources\Metric;
+
+$flagPal = app(FlagPal::class);
+
+// ... purchase completes ...
+
+foreach ($flagPal->getEnteredFunnels() as $entry) {
+    $flagPal->recordMetric(new Metric(['name' => 'conversion']), $entry->set, 1);
+}
 ```
 
-### Logging
+`getEnteredFunnels()` gives you every Experiment/Experience variant this request resolved into - this records a conversion against whichever one the visitor was actually in.
 
-FlagPal logs errors when API operations fail. Configure the logging driver:
+If your conversion happens in a *later*, unrelated request (e.g. checkout completes days after signup), you'll need to persist which variant the visitor saw yourself - the same way you'd persist any other feature value; see [Using flags from your app's storage](#using-flags-from-your-apps-storage).
+
+## Reading Results
+
+Head to the Experiment's page in the FlagPal dashboard - exposure counts (from step 5), conversions (from step 6), and statistical significance are calculated for you. ([guide →](https://docs.flagpal.com/guides/reading-experiment-results))
+
+## Core Concepts
+
+Quick reference - see each doc page for the full explanation:
+
+| Concept | Docs |
+|---|---|
+| Feature Flags | [docs.flagpal.com/concepts/feature-flags](https://docs.flagpal.com/concepts/feature-flags) |
+| Experiences | [docs.flagpal.com/concepts/experiences](https://docs.flagpal.com/concepts/experiences) |
+| Experiments | [docs.flagpal.com/concepts/experiments](https://docs.flagpal.com/concepts/experiments) |
+| Metrics | [docs.flagpal.com/concepts/metrics](https://docs.flagpal.com/concepts/metrics) |
+| Targeting Rules | [docs.flagpal.com/concepts/targeting-rules](https://docs.flagpal.com/concepts/targeting-rules) |
+| Actors | [docs.flagpal.com/concepts/actors](https://docs.flagpal.com/concepts/actors) |
+| Projects & Teams | [docs.flagpal.com/concepts/projects-and-teams](https://docs.flagpal.com/concepts/projects-and-teams) |
+
+## Multiple FlagPal Projects
+
+Many teams split flags across projects - for example, one project for A/B experiments, another for remote configuration. First, add each project's token to `config/flagpal.php`:
 
 ```php
-// In config/flagpal.php
-'log' => [
-    'driver' => 'single', // Use a specific log channel
-],
-```
-
-## Laravel Pennant Integration
-
-This package includes a custom driver for [Laravel Pennant](https://github.com/laravel/pennant), Laravel's feature flag package. This allows you to use FlagPal within Laravel Pennant.
-
-### Configuration
-
-A `flagpal` Pennant store, backed by your `default_project`, is registered automatically - there's nothing to add to `config/pennant.php` to use Pennant with your default project.
-
-If you'd like to use a non-default project, or configure multiple FlagPal projects as separate stores, define `flagpal` (or any other store name) yourself in `config/pennant.php` and the package will leave it untouched:
-
-```php
-'stores' => [
-    'flagpal' => [
-        'driver' => 'flagpal',
-        'project' => 'My Other Project',
+// config/flagpal.php
+'projects' => [
+    'Experiments' => [
+        'name' => 'Experiments',
+        'bearer_token' => env('FLAGPAL_EXPERIMENTS_TOKEN'),
+    ],
+    'Remote Config' => [
+        'name' => 'Remote Config',
+        'bearer_token' => env('FLAGPAL_REMOTE_CONFIG_TOKEN'),
     ],
 ],
 ```
 
-### Basic Usage
+Then register a Pennant store per project:
 
-Once configured, you can use Laravel Pennant as usual:
+```php
+// config/pennant.php
+'stores' => [
+    'flagpal_experiments' => [
+        'driver' => 'flagpal',
+        'project' => 'Experiments',
+    ],
+    'flagpal_configs' => [
+        'driver' => 'flagpal',
+        'project' => 'Remote Config',
+    ],
+],
+```
 
 ```php
 use Laravel\Pennant\Feature;
 
-if (Feature::active('new-api')) {
-    // The feature is active
-}
+Feature::store('flagpal_experiments')->active('checkout-redesign');
+Feature::store('flagpal_configs')->value('payment-gateway');
 ```
 
-### Scoped Features
+Each store is fully isolated - switching projects on one can never affect another, whether you're using multiple Pennant stores or calling `FlagPal::asProject()` directly from unrelated services. Every call for a given project, from anywhere in the request, converges on the same stable instance.
 
-You can use scoped features with Pennant and FlagPal in multiple ways:
-- As a stateless collection of features (this is a building block of the following options)
-- Using feature flags from your application's storage (recommended)
-- Using FlagPal as a remote data warehouse (simpler than storing in your app, but less control)
+## Guests / Anonymous Visitors
 
-#### Stateless
-Using FlagPal in a stateless way is probably simplest to understand because it doesn't involve any Laravel "magic": you define your own Pennant scope, instead of relying on a default.
-This approach is most commonly used if you're using FlagPal as a remote configurator. For example, imagine you need to use different payment gateways, depending on your current APP's locale to provide the best customer experience:
-```php
-// Create your stateless features (your app's, or subsystem's configuration)
-$features = new \FlagPal\FlagPal\Pennant\StatelessFeatures(['locale' => \Illuminate\Support\Facades\App::getLocale()]);
-
-\Laravel\Pennant\Feature::driver('flagpal_payments_project')->for($features)->value('payment-gateway'); // could be 'stripe' for US, or 'boleto' for Brazil. All configured in FlagPal
-```
-
-#### Using flags from your app's storage
-
-This approach may be the most common use case when you want to keep track of features for specific models (like User, Team, Organization). This approach is used by Laravel Pennant itself and its DatabaseDriver.
-It's recommended to store features in your own storage (like a database), and provide those features as `StatelessFeatures` for FlagPal. For convenience, you can use the `features` database table that is already created by Pennant.
-Storing feature flags locally provides you with a few additional benefits:
-- You save a round trip to the FlagPal's API. This increases your application's performance, since you only need to query your database, which is usually quicker.
-- You may want to manipulate your data more directly (like performing custom analytical queries, or mass updating some values).
-
-To use this approach, your model only needs to implement the `FlagPal\FlagPal\Contracts\Pennant\StoresFlagPalFeatures` interface.
-There's a trait that should cover most of the common use cases for storing feature flags, if you're using Pennant: `FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase`
-
-```php
-class User extends Model
-{
-    use Laravel\Pennant\Concerns\HasFeatures;
-    use FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase;
-}
-
-// Usage
-/** @var User $user */
-$user = User::first();
-$user->features()->set(['some-feature' => 'you-have-by-default']);
-
-// Resolving features via Pennant will automatically save them, if you have the method saveFlagPalFeatures() defined in your model/scope. It's the same how the DatabaseDriver works, but you can store it however YOU want.
-$user->features()->all(); // ['some-feature' => 'you-have-by-default', 'some-other-feature' => 'resolved-from-flagpal']
-```
-
-#### Guests / anonymous visitors
-
-The storage-based approaches above assume you have a model to scope features to (like an authenticated `User`). For visitors who aren't authenticated yet, the package ships a ready-made cookie-backed scope: `FlagPal\FlagPal\Pennant\GuestScope`.
-
-Wire it up alongside your regular scope resolution, falling back to it for unauthenticated requests:
+Storage-based scopes (below) assume an authenticated model to scope features to. For visitors who aren't authenticated yet, the package ships a ready-made cookie-backed scope: `FlagPal\FlagPal\Pennant\GuestScope`.
 
 ```php
 // AppServiceProvider::boot()
@@ -471,33 +249,156 @@ Laravel\Pennant\Feature::resolveScopeUsing(
 );
 ```
 
-Feature values resolved for a guest are stored in a cookie (`flagpal.guest.cookie` in the config, `flagpal_guest` by default) for the configured TTL (`flagpal.guest.ttl`, 30 days by default), so a returning visitor keeps the same feature values without an account.
+Feature values resolved for a guest are stored in a cookie (`flagpal.guest.cookie`, `flagpal_guest` by default) for the configured TTL (`flagpal.guest.ttl`, 30 days by default), so a returning visitor keeps the same feature values without an account.
+
+## Advanced Usage
+
+### Scoped Features
+
+Beyond the default Pennant scope, you can resolve features for any scope in three ways:
+
+#### Stateless
+
+Define your own scope directly, without any Laravel "magic" - useful for remote configuration unrelated to a specific model:
+
+```php
+$features = new \FlagPal\FlagPal\Pennant\StatelessFeatures(['locale' => \Illuminate\Support\Facades\App::getLocale()]);
+
+\Laravel\Pennant\Feature::for($features)->value('payment-gateway'); // 'stripe' for US, 'boleto' for Brazil, configured in FlagPal
+```
+
+#### Using flags from your app's storage
+
+Recommended for user/team/organization-scoped features - resolves via FlagPal but stores the result in your own database (using Pennant's `features` table), saving a round trip on every subsequent check:
+
+```php
+class User extends Model
+{
+    use Laravel\Pennant\Concerns\HasFeatures;
+    use FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeaturesInDatabase;
+}
+
+$user->features()->set(['some-feature' => 'you-have-by-default']);
+$user->features()->all(); // ['some-feature' => 'you-have-by-default', 'some-other-feature' => 'resolved-from-flagpal']
+```
+
+This is also how you persist which Experiment variant a scope should see across separate requests, for conversions that don't happen in the same request as the initial flag check.
 
 #### Using FlagPal as a remote data warehouse
-In this scenario, you can avoid storing any data on your own, and trust FlagPal to do it for you. In this case, you can instead use the trait `FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeatures`.
-It calls the FlagPal API to save and retrieve features for your scope. Each scope must send a reference/identifier for itself, so that you can track which features belong to which scopes. 
-By default, the reference is generated through Pennant: `Feature::serializeScope($this)`. However, you can customize your reference by re-defining the method `getFlagPalReference()`. 
-This reference must uniquely identify your scope (User, Team, etc.) and will be used to automatically store and retrieve the features in FlagPal via the API:
+
+Simpler than storing in your app, at the cost of a network round trip: FlagPal stores and retrieves features for your scope directly.
 
 ```php
 class User extends Model
 {
     use Laravel\Pennant\Concerns\HasFeatures;
     use FlagPal\FlagPal\Pennant\Concerns\StoresFlagPalFeatures;
-    
-    // Implementing the method manually
-    public function getFlagPalReference(): string 
+
+    public function getFlagPalReference(): string
     {
-        return $this->email; // better yet, use ID, UUID, or some other more depersonalized property
+        return $this->id; // uniquely identifies this scope in FlagPal; defaults to Feature::serializeScope($this) if omitted
     }
 }
 
-// Usage
+$user->features()->all(); // resolving automatically stores the result in FlagPal
+```
 
-$user = User::first();
+### Managing Actors
 
-// resolving features will automatically store all their values for your scope in FlagPal itself.
-$user->features()->all(); // ['some-feature' => 'you-have-by-default', 'some-other-feature' => 'resolved-from-flagpal']
+FlagPal can also act as a data warehouse for arbitrary entities ("Actors") outside of Pennant's scope model - a user, a team, a project, anything. ([concept →](https://docs.flagpal.com/concepts/actors))
+
+```php
+use FlagPal\FlagPal\FlagPal;
+
+$flagPal = app(FlagPal::class);
+
+$actor = $flagPal->getActor('user-123');
+$actor->features; // ['new-api' => true, 'dark-mode' => false]
+
+$flagPal->saveActorFeatures('user-123', ['premium-access' => true]);
+```
+
+### Custom Cache Configuration
+
+```php
+// config/flagpal.php
+'cache' => [
+    'driver' => 'redis',
+    'ttl' => 300, // 5 minutes
+],
+```
+
+### Logging
+
+```php
+// config/flagpal.php
+'log' => [
+    'driver' => 'single', // any channel from config/logging.php, or null to disable
+],
+```
+
+## Using FlagPal Without Pennant
+
+Everything above works without Pennant at all - useful if you'd rather not adopt Pennant's scope model, or want the raw feature array.
+
+```php
+use FlagPal\FlagPal\FlagPal;
+
+$flagPal = app(FlagPal::class);
+
+$features = $flagPal->resolveFeatures();
+
+if (in_array('new-api', $features)) {
+    // Use the new API
+}
+
+// Rich (non-boolean) values work the same way
+if ($features['checkout-flow'] === 'multi-step') {
+    // Render a multi-step checkout
+}
+```
+
+A facade is available as a shorthand for `app(FlagPal::class)`:
+
+```php
+use FlagPal\FlagPal\Facades\FlagPal;
+
+$features = FlagPal::resolveFeatures();
+```
+
+### Resolving with pre-existing features
+
+Pass in feature values you already know (from your own storage, another system, etc.) and FlagPal will apply Experiments/Experiences on top of them:
+
+```php
+$currentFeatures = [
+    'dark-mode' => true,
+    'checkout-flow' => 'single-page',
+];
+
+$features = $flagPal->resolveFeatures($currentFeatures);
+```
+
+### Switching projects directly
+
+```php
+$features = $flagPal->asProject('project_b')->resolveFeatures();
+```
+
+### Recording metrics manually
+
+```php
+use FlagPal\FlagPal\Resources\Metric;
+use FlagPal\FlagPal\Resources\FeatureSet;
+
+$metric = new Metric(['name' => 'conversion']);
+$featureSet = new FeatureSet(['id' => 'checkout-v2']);
+
+$flagPal->recordMetric($metric, $featureSet, 1);
+
+// Optionally segment the metric by feature values (only features enabled for
+// segmentation on the metric are recorded; the value itself is always recorded)
+$flagPal->recordMetric($metric, $featureSet, 1, features: ['country' => 'US']);
 ```
 
 ## Testing
@@ -506,13 +407,13 @@ $user->features()->all(); // ['some-feature' => 'you-have-by-default', 'some-oth
 composer test
 ```
 
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
 ## Contributing
 
 Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+
+## Changelog
+
+Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
 ## Security Vulnerabilities
 
