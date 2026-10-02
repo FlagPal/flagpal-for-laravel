@@ -394,6 +394,20 @@ it('records a metric segmented by feature values', function () {
     expect($success)->toBeTrue();
 });
 
+it('skips sending a zero metric value', function () {
+    $metricTimeSeriesRepository = $this->createMock(MetricTimeSeriesRepository::class);
+
+    /** @var FlagPal $flagPal */
+    $flagPal = $this->app->make(FlagPal::class, ['metricTimeSeriesRepository' => $metricTimeSeriesRepository]);
+
+    $metricTimeSeriesRepository->expects($this->never())->method('create');
+
+    $metric = (new Metric)->setId('123');
+    $set = (new FeatureSet)->setId('123');
+
+    expect($flagPal->recordMetric($metric, $set, 0))->toBeTrue();
+});
+
 it('gets actor by reference', function (DocumentInterface $repositoryResult, ?Actor $expected) {
     $actorRepository = $this->createMock(ActorRepository::class);
 

@@ -84,3 +84,27 @@ it('skips recording the metric if it is not tracked in the funnel', function () 
 
     $job->handle($flagPal);
 });
+
+it('passes a zero value through to the client guard', function () {
+    $hydrator = $this->app->make(ItemHydrator::class);
+    $funnel = $hydrator->hydrate(new Funnel, [
+        'featureSets' => [
+            [
+                'id' => '5678',
+                FeatureSet::FEATURES => ['test' => 'foo', 'bar' => ['baz']],
+            ],
+        ],
+        'metrics' => [
+            ['id' => '5678', Metric::NAME => 'conversion'],
+        ],
+    ]);
+    $entry = new EnteredFunnel($funnel, $funnel->featureSets->first());
+    $job = new RecordMetricForEnteredFunnelJob($entry, 'conversion', 0);
+
+    // The zero guard lives in FlagPal::recordMetric, the single seam that
+    // writes to the server. The job passes the value through untouched.
+    $flagPal = $this->createMock(FlagPal::class);
+    $flagPal->expects($this->once())->method('recordMetric')->willReturn(true);
+
+    $job->handle($flagPal);
+});

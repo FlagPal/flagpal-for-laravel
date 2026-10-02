@@ -130,6 +130,10 @@ class FlagPal
 
     public function recordMetric(Metric $metric, FeatureSet $set, int $value, array $features = [], ?DateTimeInterface $dateTime = null): bool
     {
+        if ($value === 0) {
+            return true;
+        }
+
         $item = $this->itemHydrator->hydrate(new MetricTimeSeries, [
             MetricTimeSeries::METRIC => $metric->toJsonApiArray(),
             MetricTimeSeries::FEATURE_SET => $set->toJsonApiArray(),
