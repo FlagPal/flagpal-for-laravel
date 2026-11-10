@@ -1,0 +1,19 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Trait FlagPal\\FlagPal\\Pennant\\Concerns\\StoresFlagPalFeatures is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Pennant/Concerns/StoresFlagPalFeatures.php
+
+		-
+			message: '#^Trait FlagPal\\FlagPal\\Pennant\\Concerns\\StoresFlagPalFeaturesInDatabase is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Pennant/Concerns/StoresFlagPalFeaturesInDatabase.php
+
+		-
+			message: '#^Trait FlagPal\\FlagPal\\Pennant\\HasFlagPalReference is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Pennant/HasFlagPalReference.php

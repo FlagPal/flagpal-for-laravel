@@ -61,8 +61,8 @@ If you'd rather not use Pennant at all, the SDK works completely standalone too 
 
 ## Requirements
 
-- PHP 8.2+
-- Laravel 11 or 12
+- PHP 8.2+ (8.3+ for Laravel 13)
+- Laravel 12 or 13
 - A [FlagPal](https://flagpal.com) account and project ([create one free](https://flagpal.com))
 
 ## Quick Start
