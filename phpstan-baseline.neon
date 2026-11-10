@@ -17,9 +17,3 @@ parameters:
 			identifier: trait.unused
 			count: 1
 			path: src/Pennant/HasFlagPalReference.php
-
-		-
-			message: '#^Property FlagPal\\FlagPal\\Support\\Raffle\:\:\$alwaysDraw \(int\|string\|null\) is never assigned int so it can be removed from the property type\.$#'
-			identifier: property.unusedType
-			count: 1
-			path: src/Support/Raffle.php

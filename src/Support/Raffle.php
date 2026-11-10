@@ -4,7 +4,7 @@ namespace FlagPal\FlagPal\Support;
 
 class Raffle
 {
-    private null|int|string $alwaysDraw = null;
+    private ?string $alwaysDraw = null;
 
     /**
      * @param  array<int|string,int>  $pool
