@@ -39,7 +39,7 @@ trait StoresFlagPalFeaturesInDatabase
         $toActivate = collect($features)
             ->filter(fn ($value, $name) => $value !== null)
             ->map(fn ($value, $name) => json_encode($value, flags: JSON_THROW_ON_ERROR))
-            ->diff(collect($currentFeatures)->map(fn ($value, $name) => json_encode($value, flags: JSON_THROW_ON_ERROR)))
+            ->diffAssoc(collect($currentFeatures)->map(fn ($value, $name) => json_encode($value, flags: JSON_THROW_ON_ERROR)))
             ->toArray();
 
         if (! empty($toDeactivate)) {
