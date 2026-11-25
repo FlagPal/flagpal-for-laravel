@@ -310,3 +310,71 @@ it('saves carbon feature values to database', function () {
 
     expect($result)->toBe($model);
 });
+
+it('upserts a feature whose new value already exists on another feature', function () {
+    $builder = $this->createMock(Builder::class);
+    $currentFeatures = collect([
+        'feature1' => json_encode(true),
+        'feature2' => json_encode(false),
+    ]);
+
+    DB::shouldReceive('connection')
+        ->times(2)
+        ->with(null)
+        ->andReturnSelf();
+
+    DB::shouldReceive('table')
+        ->times(2)
+        ->with('features')
+        ->andReturn($builder);
+
+    // For getFlagPalFeatures and the upsert query
+    $builder->expects($this->exactly(2))
+        ->method('where')
+        ->with('scope', 'test-scope')
+        ->willReturnSelf();
+
+    $builder->expects($this->once())
+        ->method('pluck')
+        ->with('value', 'name')
+        ->willReturn($currentFeatures);
+
+    $builder->expects($this->never())
+        ->method('delete');
+
+    // feature1 changed true -> false; false already exists on feature2,
+    // so a value-only diff() would wrongly drop it from the upsert.
+    $builder->expects($this->once())
+        ->method('upsert')
+        ->with($this->callback(function ($items) {
+            return count($items) === 1
+                && $items[0]['name'] === 'feature1'
+                && $items[0]['scope'] === 'test-scope'
+                && json_decode($items[0]['value']) === false;
+        }), ['name', 'scope'], ['value', DatabaseDriver::UPDATED_AT]);
+
+    $model = new class implements StoresFlagPalFeaturesContract
+    {
+        use StoresFlagPalFeaturesInDatabase;
+
+        public function __toString()
+        {
+            return 'test-model';
+        }
+    };
+
+    // Mock the Feature::serializeScope method
+    Feature::shouldReceive('serializeScope')
+        ->times(3)
+        ->with($model)
+        ->andReturn('test-scope');
+
+    $result = $model->saveFlagPalFeatures([
+        'feature1' => false,
+        'feature2' => false,
+    ]);
+
+    expect($model->getFlagPalFeatures()->features)->toBe(['feature1' => false, 'feature2' => false]);
+
+    expect($result)->toBe($model);
+});
