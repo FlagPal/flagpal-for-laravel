@@ -2,9 +2,14 @@
     "name": "flagpal/flagpal-for-laravel",
     "description": "An SDK for using the FlagPal in Laravel",
     "keywords": [
-        "Rapolas Gruzdys",
         "laravel",
-        "flagpal-for-laravel"
+        "pennant",
+        "feature-flags",
+        "feature-toggles",
+        "ab-testing",
+        "experimentation",
+        "remote-config",
+        "flagpal"
     ],
     "homepage": "https://github.com/flagpal/flagpal-for-laravel",
     "license": "MIT",
