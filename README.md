@@ -5,23 +5,26 @@
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/flagpal/flagpal-for-laravel/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/flagpal/flagpal-for-laravel/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/flagpal/flagpal-for-laravel.svg?style=flat-square)](https://packagist.org/packages/flagpal/flagpal-for-laravel)
 
-**FlagPal for Laravel is the missing batteries for [Laravel Pennant](https://laravel.com/docs/pennant).** Pennant gives Laravel a clean feature-flag API, but ships with nowhere to manage flags, target users, run experiments, or read results - you'd have to build all of that yourself. This package plugs [FlagPal](https://flagpal.com) in as a Pennant driver, so `Feature::active(...)` is instantly backed by a real dashboard: percentage rollouts, targeting rules, multi-variant A/B tests, and conversion tracking, with no extra infrastructure and (for the common case) zero extra configuration.
+**FlagPal for Laravel is a [Laravel Pennant](https://laravel.com/docs/pennant) driver backed by [FlagPal](https://flagpal.com).** Your checks stay plain Pennant - `Feature::active()`, `Feature::value()`, and Blade directives - while flag values, rollout percentages, targeting rules, and A/B test variants live in a dashboard the rest of your team can use. Changes there take effect without a deploy.
 
-🏠 [flagpal.com](https://flagpal.com) - the product · 📖 [docs.flagpal.com](https://docs.flagpal.com) - full documentation, concepts, and dashboard guides
+What that gives you, behind the same Pennant API:
 
-If you just want to see it work: jump to [Quick Start](#quick-start) or [Your First A/B Test](#your-first-ab-test).
+- Remote config: flags can be boolean, string, integer, array, or date, so a rate limit, a payment gateway, or a simple on/off becomes a value you edit in the dashboard instead of a code change.
+- Targeting: any property your app sends (country, plan, signup date) can be used in targeting rules, so the right users see the right values.
+- A/B tests with metrics: split traffic across variants and attach a metric, and the dashboard shows conversion per variant with statistical significance.
+
+🏠 [flagpal.com](https://flagpal.com) - the product · 📖 [docs.flagpal.com](https://docs.flagpal.com) - full documentation, concepts, and dashboard guides · 🧭 [flagpal.com/laravel](https://flagpal.com/laravel) - Laravel overview
+
+If you just want to see it work: [Quick Start](#quick-start) gets you checking a flag in about five minutes, then [Your First A/B Test](#your-first-ab-test) walks through a full experiment.
 
 ## Table of Contents
 
-- [What is FlagPal?](#what-is-flagpal)
-- [Why this package?](#why-this-package)
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
 - [Your First A/B Test](#your-first-ab-test)
 - [Reading Results](#reading-results)
+- [What is FlagPal?](#what-is-flagpal)
 - [Core Concepts](#core-concepts)
-- [Multiple FlagPal Projects](#multiple-flagpal-projects)
-- [Guests / Anonymous Visitors](#guests--anonymous-visitors)
 - [Advanced Usage](#advanced-usage)
 - [Using FlagPal Without Pennant](#using-flagpal-without-pennant)
 - [Testing](#testing)
@@ -30,34 +33,6 @@ If you just want to see it work: jump to [Quick Start](#quick-start) or [Your Fi
 - [Security Vulnerabilities](#security-vulnerabilities)
 - [Credits](#credits)
 - [License](#license)
-
-## What is FlagPal?
-
-[FlagPal](https://flagpal.com) is a feature management and experimentation platform: a dashboard where your team defines feature flags, controls who sees what, and measures whether changes actually work - without a developer needing to deploy code for every rollout decision.
-
-Four concepts, in one sentence each (full explanations in the [docs](https://docs.flagpal.com/getting-started/what-is-flagpal)):
-
-| Concept | What it is |
-|---|---|
-| **Feature Flag** | A named, typed value - a light switch, a string, a number - that your app reads at runtime. |
-| **Experience** | Delivers one fixed set of flag values to a targeted group of users (e.g. "beta users get `new_checkout_flow = true`"). |
-| **Experiment** | An A/B (or A/B/n) test - splits traffic across multiple variants, each setting flags differently, so you can measure which one wins. |
-| **Metric** | Something you measure against an Experiment - conversions, revenue, clicks - to decide the winner. |
-
-You don't need to understand FlagPal's dashboard deeply to use this package - the [Quick Start](#quick-start) below gets you checking a flag in minutes, and the [A/B test walkthrough](#your-first-ab-test) explains the rest as you go.
-
-## Why this package?
-
-With Laravel Pennant's built-in drivers, your feature flag resolution rules live in your codebase itself - every flag is a PHP closure you write, maintain, and ship. That design has two real costs. First, rules can't change without a deployment: every rollout tweak, targeting adjustment, or experiment change has to go through code review and release, which restricts how quickly your team can deliver experiments and experiences. Second, Pennant leaves developers to whip up their own feature activation rule logic - percentage rollouts, targeting rules, multi-variant experiments, result tracking - making the learning curve steeper and scaling feature management across a team more difficult.
-
-This package is a Pennant driver backed by FlagPal, so:
-
-- `Feature::active('new-api')` and friends work exactly as Pennant already teaches you, no new API to learn for the common case.
-- Flags, rollout percentages, targeting rules, and experiment variants are managed in the FlagPal dashboard - no redeploying your app to change who sees what.
-- A/B tests are a first-class concept (Experiments), with conversion metrics and statistical results, not something you bolt on yourself.
-- Registering the driver, caching resolved flags, and (optionally) tracking who was exposed to which variant are handled for you.
-
-If you'd rather not use Pennant at all, the SDK works completely standalone too - see [Using FlagPal Without Pennant](#using-flagpal-without-pennant).
 
 ## Requirements
 
@@ -107,7 +82,19 @@ if (Feature::active('new-checkout')) {
 }
 ```
 
-`new-checkout` is a flag you define in the FlagPal dashboard - the SDK resolves whatever's configured there.
+`new-checkout` is a flag you define in the FlagPal dashboard - the SDK resolves whatever's configured there. Rich values work the same way:
+
+```php
+$color = Feature::value('checkout-button-color'); // 'blue', set in the dashboard
+```
+
+Pennant's Blade directives keep working too, since this is just a Pennant driver:
+
+```blade
+@feature('new-checkout')
+    {{-- show the new checkout --}}
+@endfeature
+```
 
 ## Your First A/B Test
 
@@ -181,21 +168,33 @@ If your conversion happens in a *later*, unrelated request (e.g. checkout comple
 
 Head to the Experiment's page in the FlagPal dashboard - exposure counts (from step 5), conversions (from step 6), and statistical significance are calculated for you. ([guide →](https://docs.flagpal.com/guides/reading-experiment-results))
 
+## What is FlagPal?
+
+[FlagPal](https://flagpal.com) is a feature management and experimentation platform: a dashboard where your team defines feature flags, controls who sees what, and measures whether changes actually work - without a developer needing to deploy code for every rollout decision.
+
+You don't need to understand FlagPal's dashboard deeply to use this package - the [Quick Start](#quick-start) above gets you checking a flag in minutes, and the [A/B test walkthrough](#your-first-ab-test) explains the rest as you go.
+
 ## Core Concepts
 
 Quick reference - see each doc page for the full explanation:
 
-| Concept | Docs |
-|---|---|
-| Feature Flags | [docs.flagpal.com/concepts/feature-flags](https://docs.flagpal.com/concepts/feature-flags) |
-| Experiences | [docs.flagpal.com/concepts/experiences](https://docs.flagpal.com/concepts/experiences) |
-| Experiments | [docs.flagpal.com/concepts/experiments](https://docs.flagpal.com/concepts/experiments) |
-| Metrics | [docs.flagpal.com/concepts/metrics](https://docs.flagpal.com/concepts/metrics) |
-| Targeting Rules | [docs.flagpal.com/concepts/targeting-rules](https://docs.flagpal.com/concepts/targeting-rules) |
-| Actors | [docs.flagpal.com/concepts/actors](https://docs.flagpal.com/concepts/actors) |
-| Projects & Teams | [docs.flagpal.com/concepts/projects-and-teams](https://docs.flagpal.com/concepts/projects-and-teams) |
+| Concept | What it is | Docs |
+|---|---|---|
+| Feature Flags | A named, typed value - a light switch, a string, a number - that your app reads at runtime. | [docs.flagpal.com/concepts/feature-flags](https://docs.flagpal.com/concepts/feature-flags) |
+| Experiences | Deliver one fixed set of flag values to a targeted group of users (e.g. "beta users get `new_checkout_flow = true`"). | [docs.flagpal.com/concepts/experiences](https://docs.flagpal.com/concepts/experiences) |
+| Experiments | An A/B (or A/B/n) test - splits traffic across multiple variants, each setting flags differently, so you can measure which one wins. | [docs.flagpal.com/concepts/experiments](https://docs.flagpal.com/concepts/experiments) |
+| Metrics | Something you measure against an Experiment - conversions, revenue, clicks - to decide the winner. | [docs.flagpal.com/concepts/metrics](https://docs.flagpal.com/concepts/metrics) |
+| Targeting Rules | | [docs.flagpal.com/concepts/targeting-rules](https://docs.flagpal.com/concepts/targeting-rules) |
+| Actors | | [docs.flagpal.com/concepts/actors](https://docs.flagpal.com/concepts/actors) |
+| Projects & Teams | | [docs.flagpal.com/concepts/projects-and-teams](https://docs.flagpal.com/concepts/projects-and-teams) |
 
-## Multiple FlagPal Projects
+Full explanations in the [docs](https://docs.flagpal.com/getting-started/what-is-flagpal).
+
+## Advanced Usage
+
+Everything below is optional - the [Quick Start](#quick-start) covers the common case. These are the patterns to reach for when you outgrow a single default project or the default Pennant scope.
+
+### Multiple FlagPal Projects
 
 Many teams split flags across projects - for example, one project for A/B experiments, another for remote configuration. First, add each project's token to `config/flagpal.php`:
 
@@ -238,7 +237,7 @@ Feature::store('flagpal_configs')->value('payment-gateway');
 
 Each store is fully isolated - switching projects on one can never affect another, whether you're using multiple Pennant stores or calling `FlagPal::asProject()` directly from unrelated services. Every call for a given project, from anywhere in the request, converges on the same stable instance.
 
-## Guests / Anonymous Visitors
+### Guests / Anonymous Visitors
 
 Storage-based scopes (below) assume an authenticated model to scope features to. For visitors who aren't authenticated yet, the package ships a ready-made cookie-backed scope: `FlagPal\FlagPal\Pennant\GuestScope`.
 
@@ -250,8 +249,6 @@ Laravel\Pennant\Feature::resolveScopeUsing(
 ```
 
 Feature values resolved for a guest are stored in a cookie (`flagpal.guest.cookie`, `flagpal_guest` by default) for the configured TTL (`flagpal.guest.ttl`, 30 days by default), so a returning visitor keeps the same feature values without an account.
-
-## Advanced Usage
 
 ### Scoped Features
 
@@ -427,3 +424,7 @@ Please review [our security policy](../../security/policy) on how to report secu
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+
+---
+
+Laravel docs homepage: [flagpal.com/laravel](https://flagpal.com/laravel) · Product: [flagpal.com](https://flagpal.com) · Full docs: [docs.flagpal.com](https://docs.flagpal.com)
