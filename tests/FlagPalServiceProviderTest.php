@@ -67,6 +67,33 @@ it('registers the pennant driver', function () {
     expect($driver->flagPal->getProject())->toBe('bar');
 });
 
+it('keeps two Pennant stores backed by different projects fully isolated within one request', function () {
+    config([
+        'flagpal.projects' => [
+            'experiments' => [],
+            'configs' => [],
+        ],
+        'flagpal.default_project' => 'experiments',
+        'pennant.stores' => [
+            'flagpal_experiments' => ['driver' => 'flagpal', 'project' => 'experiments'],
+            'flagpal_configs' => ['driver' => 'flagpal', 'project' => 'configs'],
+        ],
+    ]);
+
+    /** @var FlagPalDriver $experimentsDriver */
+    $experimentsDriver = Laravel\Pennant\Feature::store('flagpal_experiments')->getDriver();
+    expect($experimentsDriver->flagPal->getProject())->toBe('experiments');
+
+    // Touching a second store backed by a different project later in the same
+    // request must not silently reassign the first store's project.
+    /** @var FlagPalDriver $configsDriver */
+    $configsDriver = Laravel\Pennant\Feature::store('flagpal_configs')->getDriver();
+    expect($configsDriver->flagPal->getProject())->toBe('configs');
+
+    expect($experimentsDriver->flagPal->getProject())->toBe('experiments')
+        ->and($experimentsDriver->flagPal)->not->toBe($configsDriver->flagPal);
+});
+
 it('throws a clear exception when switching to an unknown project', function () {
     config([
         'flagpal.projects' => [
@@ -99,4 +126,26 @@ it('does not override an app-defined flagpal Pennant store', function () {
 
 it('resolves FlagPal as a scoped/shared instance within a request', function () {
     expect(app(FlagPal::class))->toBe(app(FlagPal::class));
+});
+
+it('gives raw asProject() usage the same stability as Pennant, independent of it', function () {
+    config([
+        'flagpal.projects' => [
+            'experiments' => [],
+            'configs' => [],
+        ],
+        'flagpal.default_project' => 'experiments',
+    ]);
+
+    // Two unrelated call sites, each independently resolving FlagPal and
+    // switching projects — as if two separate services did this, with no
+    // knowledge of each other or of Pennant.
+    $configsFromSiteA = app(FlagPal::class)->asProject('configs');
+    $configsFromSiteB = app(FlagPal::class)->asProject('configs');
+
+    expect($configsFromSiteA)->toBe($configsFromSiteB)
+        ->and($configsFromSiteA->getProject())->toBe('configs');
+
+    // The default instance itself must remain unaffected by that switch.
+    expect(app(FlagPal::class)->getProject())->toBe('experiments');
 });

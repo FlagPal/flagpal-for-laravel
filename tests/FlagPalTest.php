@@ -704,17 +704,20 @@ it('memoizes getFunnels per project so asProject switches refetch', function () 
     // project a — second load served from instance cache
     $flagPal->getFunnels();
 
-    $flagPal->asProject('b');
+    $projectB = $flagPal->asProject('b');
 
     // project b — new entry, hits repo
-    $flagPal->getFunnels();
+    $projectB->getFunnels();
     // project b — served from instance cache
-    $flagPal->getFunnels();
+    $projectB->getFunnels();
 
-    $flagPal->asProject('a');
+    $projectA = $projectB->asProject('a');
+
+    // switching back to 'a' returns the exact same, still-memoized instance
+    expect($projectA)->toBe($flagPal);
 
     // project a — still memoized from earlier, no third repo call
-    $flagPal->getFunnels();
+    $projectA->getFunnels();
 });
 
 it('forgetDefinedFeaturesCache clears memoized defined features and the persistent cache', function () {

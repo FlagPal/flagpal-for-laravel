@@ -48,6 +48,7 @@ class FlagPalServiceProvider extends PackageServiceProvider
         $this->registerParsers();
         $this->registerClients();
 
+        $this->app->scoped(FlagPalProjectRegistry::class);
         $this->app->scoped(FlagPal::class);
     }
 
